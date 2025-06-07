@@ -1,0 +1,119 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.2.2' // Spring Boot 최신 안정 버전
+    id 'io.spring.dependency-management' version '1.1.4' // 최신 안정 버전
+    id 'war' // WAR 패키징 추가
+}
+
+group = 'com.jh'
+version = '0.0.1-SNAPSHOT'
+
+// Spring Cloud 버전 지정 - Spring Boot 3.2.2에 호환되는 버전
+ext {
+    set('springCloudVersion', "2023.0.0")
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    providedRuntime
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // 개발 편의를 위한 DevTools
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // JPA - 데이터베이스 ORM
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // MyBatis - 데이터베이스 매핑을 위한 ORM
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+    
+    // JSON 데이터 처리용 Jackson Databind
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
+    
+    // Spring Boot Web - MVC 기반 웹 개발
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    
+    // Spring Security - 보안, 인증/인가 처리
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    
+    // Spring Validation - 입력 값 검증 등
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // OAuth2 로그인 (카카오, 구글 등)
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    
+    // JSP 및 JSTL 지원 (내장 톰캣 사용) - 구버전 주석 처리
+    // implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
+    // implementation 'javax.servlet:jstl:1.2'
+    
+    // 최신 Jakarta EE 9+ 호환 JSP 및 JSTL
+    implementation 'org.apache.tomcat:tomcat-jasper:10.1.19'
+    implementation 'jakarta.servlet.jsp.jstl:jakarta.servlet.jsp.jstl-api:3.0.0'
+    implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl:3.0.1'
+    
+    // MySQL Connector - MySQL 데이터베이스 연결
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    
+    // Spring Boot Mail - 이메일 발송 기능
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    
+    // 테스트 관련 의존성
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    
+    // Lombok - 코드 간소화 (빌드 시에만 사용)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    
+    // WAR 패키징 지원
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    
+    // -----------------------------------------------
+    // 추가된 의존성 (AI 감정일기 및 추천 서비스 확장 관련)
+    
+    // 외부 AI API 연동을 위한 HTTP 클라이언트(OpenFeign)
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    
+    // 애플리케이션 모니터링 및 헬스체크 (Actuator)
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    
+    // API 문서화 (Swagger/OpenAPI 지원) - REST API 시각화 및 테스트 도구
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0'
+    
+    // Spring Boot Cache
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+    // JSR 310 호환성 지원 , LocalDate 타입 직렬화 지원 
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    // -----------------------------------------------
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// WAR 파일 이름 설정
+bootWar {
+    archiveFileName = 'emotionDiary.war'
+}
+
+// 의존성 관리에 Spring Cloud BOM 추가
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
