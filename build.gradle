@@ -40,7 +40,7 @@ dependencies {
     // MyBatis - 데이터베이스 매핑을 위한 ORM
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
     
-    // JSON 데이터 처리용 Jackson Databind
+    // JSON 데이터 처리를 위한 Jackson Databind
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
     
     // Spring Boot Web - MVC 기반 웹 개발
@@ -99,7 +99,7 @@ dependencies {
 
     // JSR 310 호환성 지원 , LocalDate 타입 직렬화 지원 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-    // -----------------------------------------------
+    // -----------------------------------------------1
 }
 
 tasks.named('test') {

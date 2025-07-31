@@ -258,6 +258,8 @@ public class AiEmotionAnalysisService {
         List<UserRecommendationResponseDto> userRecommendationResponseDtos = new ArrayList<>();
 
         for(Recommendation rec : recommendations) {
+            // 값 확인용 로그 추가
+            System.out.println("[추천정보] type: " + rec.getType() + ", title: " + rec.getTitle() + ", reason: " + rec.getReason() + ", link: " + rec.getLink() + ", typePreference: " + rec.getTypePreference());
             UserRecommendationResponseDto userRecommendationResponseDto = new UserRecommendationResponseDto();
             userRecommendationResponseDto.setDiaryRecord(diaryId);
             userRecommendationResponseDto.setTypePreference(rec.getTypePreference());

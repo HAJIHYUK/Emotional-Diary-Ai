@@ -2,9 +2,6 @@ package com.jh.emotion.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-
-import com.jh.emotion.dto.DiaryWriteDto;
 
 @Controller
 public class HomeController {
@@ -22,5 +19,15 @@ public class HomeController {
     @GetMapping("/user-preference")
     public String userPreference() {
         return "user_preference_input";
+    }
+
+    @GetMapping("/naver-search")
+    public String naverSearch() {
+        return "naver_search";
+    }
+
+    @GetMapping("/kakaomap")
+    public String kakaomap() {
+        return "kakaomap";
     }
 } 

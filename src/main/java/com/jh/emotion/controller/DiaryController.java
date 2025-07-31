@@ -15,7 +15,9 @@ import com.jh.emotion.dto.DiaryDetailDto;
 import com.jh.emotion.dto.DiaryListDto;
 import com.jh.emotion.dto.DiaryWriteDto;
 import com.jh.emotion.dto.SuccessResponse;
+import com.jh.emotion.dto.UserRecommendationResponseDto;
 import com.jh.emotion.entity.DiaryRecord;
+import com.jh.emotion.service.AiEmotionAnalysisService;
 import com.jh.emotion.service.DiaryService;
 
 import lombok.RequiredArgsConstructor;
@@ -28,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DiaryController {
 
     private final DiaryService diaryService;
-
+    private final AiEmotionAnalysisService aiRecommendationService;
     //일기 작성
     @PostMapping("/write")
     public ResponseEntity<SuccessResponse<Map<String, Object>>> writeDiary(DiaryWriteDto dto) {
@@ -64,6 +66,13 @@ public class DiaryController {
     public ResponseEntity<SuccessResponse<Void>> deleteDiary(@RequestParam("diaryId") Long diaryId) {
         diaryService.deleteDiaryRecord(diaryId);
         return ResponseEntity.ok(new SuccessResponse<>(0, "삭제 완료", null));
+    }
+
+    //일기에 있는 추천 정보 조회
+    @GetMapping("/recommendations")
+    public ResponseEntity<SuccessResponse<List<UserRecommendationResponseDto>>> getRecommendations(@RequestParam("diaryId") Long diaryId) {
+        List<UserRecommendationResponseDto> recommendations = aiRecommendationService.getRecommendations(diaryId);
+        return ResponseEntity.ok(new SuccessResponse<>(0, "추천 정보 조회 완료", recommendations));
     }
 
     

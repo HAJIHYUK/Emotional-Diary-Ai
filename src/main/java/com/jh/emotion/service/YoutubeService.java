@@ -56,9 +56,12 @@ public class YoutubeService {
         switch(type.toUpperCase()){
             case "YOUTUBE":
             case "ENTERTAINMENT":
-            case "MUSIC":
                 platform = "YOUTUBE";
                 reviewType = "";
+                break;
+            case "MUSIC":
+                platform = "YOUTUBE";
+                reviewType = "음원";
                 break;
             case "MOVIE":
                 platform = "YOUTUBE";

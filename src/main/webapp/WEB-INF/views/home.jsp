@@ -103,6 +103,17 @@
         <h3>저장된 분석 결과:</h3>
         <pre id="get-result-content"></pre>
     </div>
+
+    <hr>
+    <!-- 감정분석 결과 추천정보 조회 UI 추가 -->
+    <h2>추천 정보 조회</h2>
+    <label for="recommend-diary-id-input">추천정보 조회할 diaryRecordId 입력:</label>
+    <input type="number" id="recommend-diary-id-input" placeholder="예: 1" required />
+    <button onclick="getRecommendations()">추천정보 조회</button>
+    <div id="recommend-result" style="display: none;">
+        <h3>추천 정보 결과:</h3>
+        <pre id="recommend-result-content"></pre>
+    </div>
 </div>
 
 <script>
@@ -158,6 +169,42 @@ function getEmotionResult() {
         document.getElementById('get-result').style.display = 'block';
         document.getElementById('get-result-content').textContent = 
             '오류 발생: ' + error.message;
+    });
+}
+
+// 추천 정보 조회 함수
+function getRecommendations() {
+    const diaryId = document.getElementById('recommend-diary-id-input').value.trim();
+    if (!diaryId) {
+        alert('추천정보 조회할 diaryRecordId를 입력해주세요.');
+        return;
+    }
+    fetch('/api/diary/recommendations?diaryId=' + encodeURIComponent(diaryId))
+    .then(response => {
+        if (!response.ok) throw new Error('API 호출 중 오류가 발생했습니다.');
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById('recommend-result').style.display = 'block';
+        let html = '';
+        function getVal(val) {
+            if (val && typeof val === 'object' && 'value' in val) return val.value;
+            return (val === undefined || val === null) ? '' : val;
+        }
+        data.data.forEach(function(rec, idx) {
+            html += '추천 ' + (idx+1) + ':\n';
+            html += '  타입: ' + getVal(rec.type) + '\n';
+            html += '  제목: ' + getVal(rec.title) + '\n';
+            html += '  이유: ' + getVal(rec.reason) + '\n';
+            html += '  링크: ' + (getVal(rec.link) || '-') + '\n';
+            html += '  타입구분: ' + getVal(rec.typePreference) + '\n';
+            html += '-----------------------------\n';
+        });
+        document.getElementById('recommend-result-content').textContent = html || '추천 정보가 없습니다.';
+    })
+    .catch(error => {
+        document.getElementById('recommend-result').style.display = 'block';
+        document.getElementById('recommend-result-content').textContent = '오류 발생: ' + error.message;
     });
 }
 </script>
