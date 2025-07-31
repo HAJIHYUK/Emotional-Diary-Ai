@@ -18,39 +18,31 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "recommendations")
+@Table(name = "userClickEvent")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Recommendation {//추천 정보
+public class UserClickEvent {
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long recommendationId;
-    
+    private Long userClickEventId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "diary_record_id")
-    private DiaryRecord diaryRecord;
-    
-    private String typePreference; // matching_preferences or non_matching_preferences , 나중에 이뮨으로 바꾸는게 좋을듯?
 
     @Column(nullable = false)
-    private String type; // 추천 타입 (MOVIE, MUSIC, CAFE 등)
-    
-    private String title;// 추천 제목
+    private String type;
 
-    private String reason;// 추천 이유
+    @Column(nullable = true) // 아직 사용안함 제대로 , 확장성을 위해 일단 만들어놓음 나중에 할지 말지 결정할듯 
+    private String itemName;
 
-    private String link;// 추천 링크
-    
     @CreationTimestamp
     private LocalDateTime createdAt;
-    
-    // // 양방향 관계 추가
-    // @OneToMany(mappedBy = "recommendation", cascade = CascadeType.ALL)
-    // private List<UserInteraction> interactions = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY) // 추천 정보
+    @JoinColumn(name = "recommendation_id", nullable = true) // 추천 클릭이 있으면 값이 있고 추천 없이 클릭이 있으면 값이 NULL
+    private Recommendation recommendation;
 }

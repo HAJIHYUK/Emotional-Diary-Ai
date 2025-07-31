@@ -27,10 +27,10 @@ public class NaverSearchService {
     private final String clientSecret = "S9PDgHXxFm";
 
     // 네이버 검색 API를 통해 장소 링크 검색 ( 인스타 or 플레이스 링크 등등)
-    public List<String> searchPlaceLinks(String query, int count) {
+    public List<String> searchPlaceLinks(String query, int count, String location) {
         // 1. 네이버 지역 검색 API의 요청 URL을 생성 (검색어와 결과 개수 포함)
         String url = UriComponentsBuilder.fromHttpUrl("https://openapi.naver.com/v1/search/local.json")
-                .queryParam("query", query) // 검색어 파라미터 추가
+                .queryParam("query", location+" "+query) // 검색어 파라미터 추가
                 .queryParam("display", count) // 결과 개수 파라미터 추가
                 .build().toUriString(); // 최종 URL 생성
 

@@ -49,6 +49,7 @@ public class AiEmotionAnalysisService {
     private final UserRepository userRepository;
     private final RecommendationRepository recommendationRepository;
     private final YoutubeService youtubeService;
+    private final YoutubeAndNaverTypeClassificationService typeClassificationService;
 
 
     private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent";
@@ -177,6 +178,7 @@ public class AiEmotionAnalysisService {
         Emotion emotion = new Emotion();
         emotion.setLabel(result.path("emotion").asText()); //path 사용 이유는 get()으로 받으면 npe 발생 할 수도 있음
         emotion.setLevel(result.path("intensity").asLong());
+        emotion.setUser(diaryRecord.getUser());
         emotion.setConfidence(result.path("confidence").asDouble());
         emotion.setDescription(result.path("description").asText());
         
@@ -225,8 +227,11 @@ public class AiEmotionAnalysisService {
                 recommendation.setType(rec.path("type").asText());
                 recommendation.setTitle(rec.path("title").asText());
                 recommendation.setReason(rec.path("reason").asText());
-                recommendation.setLink(youtubeService.TypeClassification(rec.path("type").asText(),
-                rec.path("title").asText())); //유튜브 검색 로직 
+                recommendation.setLink(typeClassificationService.typeClassification(
+                    rec.path("type").asText(),
+                    rec.path("title").asText(),
+                    diaryRecord.getUser().getUserId()
+                )); //유튜브/네이버 검색 로직
                 recommendationRepository.save(recommendation);
             }
         }
@@ -242,8 +247,11 @@ public class AiEmotionAnalysisService {
                 recommendation.setType(rec.path("type").asText());
                 recommendation.setTitle(rec.path("title").asText());
                 recommendation.setReason(rec.path("reason").asText());
-                recommendation.setLink(youtubeService.TypeClassification(rec.path("type").asText(),
-                rec.path("title").asText())); //유튜브 검색 로직 
+                recommendation.setLink(typeClassificationService.typeClassification(
+                    rec.path("type").asText(),
+                    rec.path("title").asText(),
+                    diaryRecord.getUser().getUserId()
+                )); //유튜브/네이버 검색 로직
                 recommendationRepository.save(recommendation);
             }
         }

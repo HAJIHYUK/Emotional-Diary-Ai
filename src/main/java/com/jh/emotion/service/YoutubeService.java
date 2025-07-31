@@ -22,6 +22,7 @@ public class YoutubeService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    
 
     //유튜브 실제 검색 후 링크반환 
     public String getTopYoutubeLink(String title, String reviewType) {
@@ -49,50 +50,6 @@ public class YoutubeService {
         return null;
     }
 
-    //검색 타입 분류 로직 
-    public String TypeClassification(String type, String title){
-        String platform = ""; // "YOUTUBE", "NAVER", "GOOGLE", "KAKAO" 등
-        String reviewType = "";
-        switch(type.toUpperCase()){
-            case "YOUTUBE":
-            case "ENTERTAINMENT":
-                platform = "YOUTUBE";
-                reviewType = "";
-                break;
-            case "MUSIC":
-                platform = "YOUTUBE";
-                reviewType = "음원";
-                break;
-            case "MOVIE":
-                platform = "YOUTUBE";
-                reviewType = "영화 리뷰";
-                break;
-            case "BOOK":
-                platform = "YOUTUBE";
-                reviewType = "책 리뷰";
-                break;
-            case "CAFE":
-            case "RESTAURANT":
-            case "PLACE":
-            case "WALKING_TRAIL":
-            case "ACTIVITY":
-            case "FOOD":
-                platform = "NAVER";
-                reviewType = ""; // 필요시 네이버용 검색어 가공
-                break;
-            default:
-                platform = "NONE";
-                break;
-        }
-        if ("YOUTUBE".equals(platform)) {
-            return getTopYoutubeLink(title, reviewType);
-        } else if ("NAVER".equals(platform)) {
-            return null;
-        } else if ("GOOGLE".equals(platform)) {
-            return null;
-        } else {
-            return null;
-        }
-    }
+    // 검색 타입 분류 로직 메서드 삭제 (이전 위치)
 
 }
