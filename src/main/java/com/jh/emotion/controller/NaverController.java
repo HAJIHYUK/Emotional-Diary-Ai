@@ -26,7 +26,7 @@ public class NaverController {
     public ResponseEntity<SuccessResponse<List<String>>> searchPlaceLinks(
         @RequestParam(name = "query") String query,
         @RequestParam(name = "count") int count) {
-        List<String> links = naverSearchService.searchPlaceLinks(query, count,"행궁동");
+        List<String> links = naverSearchService.searchPlaceLinks(query, count,"행궁동"); // 수정 해야됨 행궁동 고정이 아닌 유저 위치 기반으로 검색
         return ResponseEntity.ok(new SuccessResponse<>(0, "검색 완료", links));
     }
 

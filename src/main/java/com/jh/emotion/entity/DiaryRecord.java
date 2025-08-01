@@ -2,8 +2,6 @@ package com.jh.emotion.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -17,7 +15,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -57,6 +54,9 @@ public class DiaryRecord {//일기 정보 (사용자 일기)
 
     @Column(nullable = false)
     private int emotionAnalysisCount = 0; // 감정분석 시도 횟수
+
+    @Column(nullable = true)
+    private String aiComment; // AI 코멘트
 
     @CreationTimestamp
     private LocalDateTime createdAt; // 일기 작성 날짜(글을 쓴 당일)

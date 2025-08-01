@@ -118,12 +118,12 @@ public class AiEmotionAnalysisService {
     "text의 감정을 분석하고, 유저 위치와 유저 취향 정보를 참고해서 " +
     "취향에 맞는 3~6개, 취향 외의 것 2~4개를 추천해줘. " +
     "아래와 같이 카테고리별로 추천 기준을 반드시 지켜줘:\n" +
-    "- CAFE, RESTAURANT, FOOD: 반드시 실제 네이버 플레이스/지도에서 검색 가능한 구체적인 종류/특징(예: '테라스 카페', '매운 갈비찜', '디저트 카페', '이탈리안 레스토랑')로만 추천해줘. '가성비', '저렴한', '분위기 좋은' 등 추상적 수식어는 절대 넣지 마. 반드시 실제 검색 가능한 키워드로만 추천해.\n" +
+    "- CAFE, RESTAURANT, FOOD: 반드시 실제 네이버 플레이스/지도에서 검색 가능한 구체적인 종류/특징(예: '테라스 카페', '매운 갈비찜', '디저트 카페', '이탈리안 레스토랑')로만 추천해줘.검색기반 엔진이기때문에 '따뜻한'등과 '가성비', '저렴한', '분위기 좋은' 등 추상적 수식어는 절대 넣지 마. 반드시 실제 검색 가능한 키워드로만 추천해.\n" +
     "- YOUTUBE, ENTERTAINMENT, MOVIE, BOOK, MUSIC: 반드시 실제 존재하는 정확한 이름(정확한 영화/책/음악/채널명 등)으로만 추천해줘. 예를 들어, '기생충', 'BTS', '해리포터', 'Love Poem', '미움받을 용기'처럼 실제 검색 가능한 고유명사(정확한 제목/이름)만 추천해. '아이유 신나는 노래', '미스터리 스릴러 영화', '긍정 심리학 도서', '다큐멘터리 영화' 등 장르, 수식어, 추상적 표현은 절대 넣지 마.\n" +
     "- PLACE, WALKING_TRAIL, ACTIVITY: 반드시 '공원 산책로', '호수공원 산책로', '숲속 둘레길', '실내 클라이밍'처럼 장소의 **간단한 특징이나 종류, 활동의 구체적인 유형(실제 검색 가능한 키워드)만** 추천해줘. '도심 속', '아늑한', '자연과 함께하는' 등 불필요한 수식어나 추상적 표현은 절대 넣지 마. 위치(도시/동네 등)는 내부적으로만 참고하고, 추천 title, reason 등 모든 응답에 지역명(도시/동네 등)은 절대 포함하지 마.\n" +
     "- non_matching_preferences(취향 외의 것)는 '반대 개념'이 아니라, 평소 선호하지 않거나 감정상태에 따라 시도해볼 만한 다른 장르/종류로만 추천해줘. 예를 들어, 평소 액션 영화를 좋아하면 멜로나 공포영화 등 다른 장르를 추천해줘. 단, 이 경우에도 반드시 실제 존재하는 정확한 이름(고유명사)만 추천해.\n" +
     "반드시 아래 JSON 형식으로만 응답해. 다른 설명이나 텍스트는 절대 포함하지 마.\n" +
-    "JSON형식:{emotion:주요감정(기쁨,슬픔,분노,불안,중립), intensity:감정강도(1-10), confidence:감정분석신뢰도(0-1), description:분석설명," +
+    "JSON형식:{emotion:주요감정(기쁨,슬픔,분노,불안,중립), intensity:감정강도(1-10), confidence:감정분석신뢰도(0-1), description:분석설명, comment:칭찬,위로 멘트 정성껏작성}" +
     "recommendations:{matching_preferences:[{type, title, reason}], non_matching_preferences:[{type, title, reason}]}} " +
     "text:" + text + " 유저선호취향:" + userPreference + " 유저위치:" + userLocation
 );
@@ -176,6 +176,7 @@ public class AiEmotionAnalysisService {
         .orElseThrow(() -> new EntityNotFoundException("DiaryRecord not found"));
 
         Emotion emotion = new Emotion();
+        diaryRecord.setAiComment(result.path("comment").asText());
         emotion.setLabel(result.path("emotion").asText()); //path 사용 이유는 get()으로 받으면 npe 발생 할 수도 있음
         emotion.setLevel(result.path("intensity").asLong());
         emotion.setUser(diaryRecord.getUser());

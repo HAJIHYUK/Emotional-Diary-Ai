@@ -66,34 +66,15 @@ public class YoutubeAndNaverTypeClassificationService {
         if ("YOUTUBE".equals(platform)) {
             return youtubeService.getTopYoutubeLink(title, reviewType);
         } else if ("NAVER".equals(platform)) {
-            List<String> links = naverSearchService.searchPlaceLinks(title, 5, user.getLocation());
-
-            String instaLink = null;
-            String anyLink = null;
-
-            for (String link : links) {
-                if (link.contains("naver")) {
-                    return link; // 1순위: 네이버 플레이스
-                }
-                if (instaLink == null && (link.contains("instagram") || link.contains("insta"))) {
-                    instaLink = link; // 2순위: 인스타그램
-                }
-                if (anyLink == null) {
-                    anyLink = link; // 3순위: 아무거나(첫 번째)
-                }
+            String link = naverSearchService.selectBestLink(naverSearchService.searchPlaceLinks(title, 5, user.getLocation()));
+            if (link != null) {
+                return link;
             }
-
-            // 2순위: 인스타그램
-            if (instaLink != null && !instaLink.isEmpty()) {
-                return instaLink;
+            // fallback: 수원으로 재검색
+            link = naverSearchService.selectBestLink(naverSearchService.searchPlaceLinks(title, 5, "수원"));
+            if (link != null) {
+                return link;
             }
-
-            // 3순위: 아무거나(첫 번째)
-            if (anyLink != null && !anyLink.isEmpty()) {
-                return anyLink;
-            }
-
-            // 전부 없으면 NO_LINK 반환
             return "NO_LINK";
         } else if ("GOOGLE".equals(platform)) {
             return null;

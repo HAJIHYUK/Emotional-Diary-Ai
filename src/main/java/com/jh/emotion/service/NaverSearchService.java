@@ -65,4 +65,28 @@ public class NaverSearchService {
         // 8. 최종적으로 링크 리스트 반환
         return links;
     }
+
+    // 네이버 검색 결과에서 최적의 링크 선택 (플레이스 > 인스타 > 기타)
+    public String selectBestLink(List<String> links) {
+        String instaLink = null;
+        String anyLink = null;
+        for (String link : links) {
+            if (link.contains("naver")) {
+                return link; // 1순위: 네이버 플레이스
+            }
+            if (instaLink == null && (link.contains("instagram") || link.contains("insta"))) {
+                instaLink = link; // 2순위: 인스타그램
+            }
+            if (anyLink == null) {
+                anyLink = link; // 3순위: 아무거나(첫 번째)
+            }
+        }
+        if (instaLink != null && !instaLink.isEmpty()) {
+            return instaLink;
+        }
+        if (anyLink != null && !anyLink.isEmpty()) {
+            return anyLink;
+        }
+        return null;
+    }
 }
