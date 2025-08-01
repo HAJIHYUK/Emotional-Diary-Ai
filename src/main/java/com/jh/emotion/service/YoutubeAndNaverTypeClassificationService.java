@@ -66,12 +66,12 @@ public class YoutubeAndNaverTypeClassificationService {
         if ("YOUTUBE".equals(platform)) {
             return youtubeService.getTopYoutubeLink(title, reviewType);
         } else if ("NAVER".equals(platform)) {
-            String link = naverSearchService.selectBestLink(naverSearchService.searchPlaceLinks(title, 5, user.getLocation()));
-            if (link != null) {
+            String link = naverSearchService.selectBestLink(naverSearchService.searchPlaceLinks(title, 10, user.getLocation()));
+            if (link != null && !link.contains("smartstore") && !link.contains("blog") ) {
                 return link;
             }
-            // fallback: 수원으로 재검색
-            link = naverSearchService.selectBestLink(naverSearchService.searchPlaceLinks(title, 5, "수원"));
+            // 위에 검색 결과가 없으면 수원으로 재검색 인데 수정해야됨 나중에 사용자 위치 기반으로 지역명 가져와야됨 
+            link = naverSearchService.selectBestLink(naverSearchService.searchPlaceLinks(title, 10, "수원"));
             if (link != null) {
                 return link;
             }

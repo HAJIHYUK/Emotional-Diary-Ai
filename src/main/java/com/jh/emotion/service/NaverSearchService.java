@@ -71,7 +71,7 @@ public class NaverSearchService {
         String instaLink = null;
         String anyLink = null;
         for (String link : links) {
-            if (link.contains("naver")) {
+            if (link.contains("map.naver")) {
                 return link; // 1순위: 네이버 플레이스
             }
             if (instaLink == null && (link.contains("instagram") || link.contains("insta"))) {
