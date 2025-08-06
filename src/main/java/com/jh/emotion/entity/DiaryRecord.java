@@ -2,6 +2,8 @@ package com.jh.emotion.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -15,7 +17,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,9 +47,14 @@ public class DiaryRecord {//일기 정보 (사용자 일기)
     @Column(nullable = true)
     private LocalDate entryDate; // 일기 작성 날짜 (사용자 지정) why? 사용자가 원하는 날짜로 일기를 작성할 수 있도록
     
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "emotion_id", unique = true, nullable = true)
-    private Emotion emotion; // 감정 정보
+    // 기존 Emotion 필드 삭제
+    // @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    // @JoinColumn(name = "emotion_id", unique = true, nullable = true)
+    // private Emotion emotion;
+
+    // 복합 감정 구조로 변경
+    @OneToMany(mappedBy = "diaryRecord", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Emotion> emotions = new ArrayList<>();
 
     @Column(nullable = false)
     private boolean isDraft = false; // true면 임시저장, false면 최종저장

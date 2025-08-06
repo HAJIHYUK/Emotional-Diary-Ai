@@ -1,5 +1,6 @@
 package com.jh.emotion.dto;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,12 +11,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmotionAnalysisResultDto {
-
-    private String emotionLabel; // 감정 라벨
-    private Long emotionLevel; // 감정 레벨
-    private String description; // 감정 설명
-    private Double confidence; // 감정 분석 신뢰도
+    private List<EmotionDto> emotions; // 감정 리스트
     private Long diaryRecordId; // 일기 레코드 ID
-
-
 }

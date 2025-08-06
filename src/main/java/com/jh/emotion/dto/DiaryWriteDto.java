@@ -4,7 +4,6 @@ package com.jh.emotion.dto;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

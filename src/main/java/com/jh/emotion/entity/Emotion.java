@@ -26,27 +26,18 @@ public class Emotion {//감정 정보
     private Long emotionId;
     
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "diary_record_id")
+    private DiaryRecord diaryRecord; // 여러 감정이 하나의 일기에 속함
+
+    private String label; //  감정 라벨 ["기쁨", "슬픔", "분노", "불안", "놀람", "역겨움", "중립"]
+    private Long level;   // 1, 2, 3 등 강도 수준 (필요시) MAX:10 MIN:0
+    private Double confidence; // 신뢰도
+    private Double ratio; // 감정 비율(선택, 없으면 null)
+    @Column(nullable = true, length = 500)
+    private String description; // 감정 설명
+
+    // user 필드는 필요에 따라 유지/삭제
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-   
-    private String label; // 감정 라벨(“기쁨”, “슬픔” 등)
-
-    private Long level; // 1, 2, 3 등 강도 수준 (필요시) MAX:10 MIN:0
-
-    @Column(nullable = true, length = 500)
-    private String description; // 유저에게 알려줄 감정 설명
-
-    private Double confidence; // 감정 분석 신뢰도
-    
-    
-    
-    // // 양방향 관계 추가
-    // @OneToMany(mappedBy = "emotion", cascade = CascadeType.ALL)
-    // private List<DiaryRecord> diaryRecords = new ArrayList<>();
-    
-    // @OneToMany(mappedBy = "emotion", cascade = CascadeType.ALL)
-    // private List<EmotionCache> caches = new ArrayList<>();
-
-    @OneToOne(mappedBy = "emotion", fetch = FetchType.LAZY)
-    private DiaryRecord diaryRecord;
 }
