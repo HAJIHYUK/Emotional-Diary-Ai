@@ -14,7 +14,6 @@ import com.jh.emotion.entity.DiaryRecord;
 import com.jh.emotion.entity.Emotion;
 import com.jh.emotion.entity.User;
 import com.jh.emotion.repository.DiaryRecordRepository;
-import com.jh.emotion.repository.EmotionRepository;
 import com.jh.emotion.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;

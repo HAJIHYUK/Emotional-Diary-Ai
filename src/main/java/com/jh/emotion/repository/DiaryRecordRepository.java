@@ -16,4 +16,7 @@ public interface DiaryRecordRepository extends JpaRepository<DiaryRecord,Long> {
     // 감정 리스트를 fetch join으로 DiaryRecord와 함께 한 번에 가져오기
     @Query("SELECT d FROM DiaryRecord d LEFT JOIN FETCH d.emotions WHERE d.diaryRecordId = :diaryRecordId")
     DiaryRecord findWithEmotionsById(@Param("diaryRecordId") Long diaryRecordId);
+
+
+    
 } 

@@ -30,4 +30,9 @@ public class HomeController {
     public String kakaomap() {
         return "kakaomap";
     }
+
+    @GetMapping("/emotion-stats")
+    public String emotionStats() {
+        return "emotion_stats_test";
+    }
 } 

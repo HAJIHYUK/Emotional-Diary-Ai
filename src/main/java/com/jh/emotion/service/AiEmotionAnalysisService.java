@@ -98,7 +98,7 @@ public class AiEmotionAnalysisService {
         ArrayNode partsArray = content.putArray("parts");
         ObjectNode textPart = partsArray.addObject();
         textPart.put("text",
-            "text의 감정을 분석하고 감정은 여러개일 수 있어 ratio 비율맞춰서 분석해, 유저 위치와 유저 취향 정보를 참고해서 " +
+            "text의 감정을 분석하고 감정은 여러개일 수 있어 감정은 기쁨,슬픔,분노,불안,놀람,역겨움,중립이 있고 감정level:0~10 confidence은 너의 분석신뢰도 이고 ratio은 감정 비율맞춰서 분석해, 유저 위치와 유저 취향 정보를 참고해서 " +
             "취향에 맞는 3~6개, 취향 외의 것 2~4개를 추천해줘. " +
             "아래와 같이 카테고리별로 추천 기준을 반드시 지켜줘:\n" +
             "- CAFE, RESTAURANT, FOOD: 반드시 실제 네이버 플레이스/지도에서 검색 가능한 구체적인 종류/특징(예: '테라스 카페', '매운 갈비찜', '디저트 카페', '이탈리안 레스토랑')로만 추천해줘.검색기반 엔진이기때문에 '따뜻한'등과 '가성비', '저렴한', '분위기 좋은' 등 추상적 수식어는 절대 넣지 마. 반드시 실제 검색 가능한 키워드로만 추천해.\n" +
