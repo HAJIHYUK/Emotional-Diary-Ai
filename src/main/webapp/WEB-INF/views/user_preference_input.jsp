@@ -15,8 +15,8 @@
         <button type="button" id="loadPreferenceBtn">선호도 조회</button>
         <label for="category">카테고리</label>
         <input type="text" id="category" name="category" required>
-        <label for="itemNames">아이템 이름(쉼표로 구분)</label>
-        <input type="text" id="itemNames" name="itemNames" required>
+        <label for="genres">장르/소분류(쉼표로 구분)</label>
+        <input type="text" id="genres" name="genres" required>
         <button type="submit">저장</button>
     </form>
     <div id="preferenceTableWrap" style="margin-top:30px; display:none;">
@@ -39,9 +39,9 @@ document.getElementById('preferenceForm').addEventListener('submit', function(e)
     e.preventDefault();
     const userId = document.getElementById('userId').value;
     const category = document.getElementById('category').value;
-    const itemNames = document.getElementById('itemNames').value.split(',').map(s => s.trim());
+    const genres = document.getElementById('genres').value.split(',').map(s => s.trim());
     // List<UserPreferenceInitialRequestDto> 구조에 맞게 배열로 보냄
-    const preferences = [{ category, itemNames }];
+    const preferences = [{ category, genres }];
     fetch('/api/user-preference/save?userId=' + encodeURIComponent(userId), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -73,7 +73,7 @@ document.getElementById('loadPreferenceBtn').addEventListener('click', function(
             } else {
                 list.forEach(pref => {
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `<td>\${pref.category}</td><td>\${pref.itemName}</td><td>\${pref.type}</td><td>\${pref.useCount}</td>`;
+                    tr.innerHTML = `<td>\${pref.category}</td><td>\${pref.genre}</td><td>\${pref.type}</td><td>\${pref.useCount}</td>`;
                     tbody.appendChild(tr);
                 });
             }

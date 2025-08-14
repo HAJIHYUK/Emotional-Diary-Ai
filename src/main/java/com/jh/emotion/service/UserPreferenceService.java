@@ -37,11 +37,15 @@ public class UserPreferenceService {
 
         // 유저 선호도 정보 저장 
         for (UserPreferenceInitialRequestDto preference : userPreferenceInitialDto) {
-            for (String itemName : preference.getItemNames()) {
+            for (String genre : preference.getGenres()) {
+                // 중복 체크
+                if (userPreferenceRepository.existsByUser_UserIdAndCategoryAndGenre(userId, preference.getCategory(), genre)) {
+                    continue; // 이미 있으면 저장하지 않음
+                }
                 UserPreference userPreference = new UserPreference();
                 userPreference.setUser(user);
                 userPreference.setCategory(preference.getCategory());
-                userPreference.setItemName(itemName);
+                userPreference.setGenre(genre);
                 userPreference.setType(PreferenceType.INITIAL);
                 userPreference.setUseCount(0);
                 userPreferenceRepository.save(userPreference);
@@ -63,7 +67,7 @@ public class UserPreferenceService {
         for(UserPreference userPreference : userPreferences) {
             UserPreferenceResponseDto userPreferenceDto = new UserPreferenceResponseDto();
             userPreferenceDto.setCategory(userPreference.getCategory().toString());
-            userPreferenceDto.setItemName(userPreference.getItemName());
+            userPreferenceDto.setGenre(userPreference.getGenre());
             userPreferenceDto.setType(userPreference.getType().toString());
             userPreferenceDto.setUseCount(userPreference.getUseCount());
             userPreferenceDtos.add(userPreferenceDto);
@@ -71,5 +75,16 @@ public class UserPreferenceService {
 
         return userPreferenceDtos;
     }
+
+
+    // 유저 클릭 이벤트 기반 유저 선호도 자동 추가
+    @Transactional(readOnly = false)
+    public void addUserPreferenceByClickEvent(Long userId, String genre) {
+        // 유저 아이디 조회
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new EntityNotFoundException("User not found"));
+    }
+
+
 
 }

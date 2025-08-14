@@ -12,4 +12,6 @@ public interface UserPreferenceRepository extends JpaRepository<UserPreference,L
 
     //유저 아이디로 유저 선호도 리스트 조회
     List<UserPreference> findByUser_UserId(Long userId);
+
+    boolean existsByUser_UserIdAndCategoryAndGenre(Long userId, com.jh.emotion.enums.PreferenceCategory category, String genre);
 } 

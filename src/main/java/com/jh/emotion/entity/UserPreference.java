@@ -43,10 +43,10 @@ public class UserPreference { // 유저 선호도 정보
     
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private PreferenceCategory category; // MUSIC, MOVIE, CAFE 등
+    private PreferenceCategory category; // 대분류/ MUSIC, MOVIE, CAFE 등 
     
     @Column(nullable = false)
-    private String itemName; // 구체적 항목명
+    private String genre; // 장르/소분류 (ex. ACTION, TERRACE, DESSERT)
     
     @Enumerated(EnumType.STRING)
     private PreferenceType type; // INITIAL(초기입력), DISCOVERED(발견됨)

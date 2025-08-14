@@ -10,7 +10,7 @@ import lombok.Setter;
 public class UserPreferenceResponseDto {
 
     private String category;
-    private String itemName;
+    private String genre;
     private String type;
     private Integer useCount;
 

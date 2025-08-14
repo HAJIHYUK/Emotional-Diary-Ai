@@ -13,5 +13,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class UserPreferenceInitialRequestDto {
     private PreferenceCategory category; // 선호도 카테고리
-    private List<String> itemNames; // 선호도 아이템 이름
+    private List<String> genres; // 선호 장르/소분류
 }

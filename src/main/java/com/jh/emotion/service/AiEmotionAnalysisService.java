@@ -84,7 +84,7 @@ public class AiEmotionAnalysisService {
         List<UserPreference> userPreferences = userPreferenceRepository.findByUser_UserId(userId);
         for (UserPreference pf : userPreferences) {
             if (pf.getType() == PreferenceType.INITIAL) {
-                userPreference = pf.getCategory().toString() + ":" + pf.getItemName();
+                userPreference = pf.getCategory().toString() + ":" + pf.getGenre();
             }
         }
 
