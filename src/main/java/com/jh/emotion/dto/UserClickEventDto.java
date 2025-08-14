@@ -12,7 +12,8 @@ import lombok.Setter;
 public class UserClickEventDto {
 
     private String type;
-    private String itemName;
+    private String genre;
+    private String title;
     private Long userId;
     private Long recommendationId;
 }

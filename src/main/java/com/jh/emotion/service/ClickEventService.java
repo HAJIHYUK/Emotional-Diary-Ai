@@ -28,17 +28,28 @@ public class ClickEventService {
     // 클릭 이벤트 저장 ()
     @Transactional(readOnly = false)
     public void saveUserClickEvent(UserClickEventDto userClickEventDto) {
-
+        log.info("[ClickEvent] 저장 요청: {}", userClickEventDto);
         User user = userRepository.findById(userClickEventDto.getUserId())
-        .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        Recommendation recommendation = recommendationRepository.findById(userClickEventDto.getRecommendationId())
-        .orElseThrow(() -> new EntityNotFoundException("Recommendation not found"));
-        
+            .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        Long recId;
+        if (userClickEventDto.getRecommendationId() != null) {
+            if (userClickEventDto.getRecommendationId() instanceof Number) {
+                recId = ((Number)userClickEventDto.getRecommendationId()).longValue();
+            } else {
+                recId = Long.parseLong(userClickEventDto.getRecommendationId().toString());
+            }
+        } else {
+            throw new EntityNotFoundException("RecommendationId is null");
+        }
+        Recommendation recommendation = recommendationRepository.findById(recId)
+            .orElseThrow(() -> new EntityNotFoundException("Recommendation not found"));
         UserClickEvent userClickEvent = new UserClickEvent();
         userClickEvent.setUser(user);
         userClickEvent.setType(userClickEventDto.getType());
-        userClickEvent.setItemName(null); // 아직 사용안함 제대로 , 확장성을 위해 일단 만들어놓음 나중에 할지 말지 결정할듯 
+        userClickEvent.setTitle(userClickEventDto.getTitle());
+        userClickEvent.setGenre(userClickEventDto.getGenre());
         userClickEvent.setRecommendation(recommendation);
         userClickEventRepository.save(userClickEvent);
+        log.info("[ClickEvent] 저장 완료: {}", userClickEvent);
     }
 }

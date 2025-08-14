@@ -35,4 +35,9 @@ public class HomeController {
     public String emotionStats() {
         return "emotion_stats_test";
     }
+
+    @GetMapping("/user-click-event")
+    public String userClickEvent() {
+        return "user_click_event";
+    }
 } 

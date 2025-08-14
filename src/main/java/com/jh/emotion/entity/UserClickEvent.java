@@ -34,10 +34,14 @@ public class UserClickEvent {
     private User user;
 
     @Column(nullable = false)
-    private String type;
+    private String type; // 대분류 (ex. MOVIE, RESTAURANT, CAFE)
 
-    @Column(nullable = true) // 아직 사용안함 제대로 , 확장성을 위해 일단 만들어놓음 나중에 할지 말지 결정할듯 
-    private String itemName;
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = true)
+    private String genre; // 소분류 장르 (ex.ACTION, TERRACE, DESSERT)
+
 
     @CreationTimestamp
     private LocalDateTime createdAt;

@@ -16,6 +16,8 @@ public class UserRecommendationResponseDto {
     private String title; // 추천 제목
     private String reason; // 추천 이유
     private String link; // 추천 링크
+    private String genre;
+    private Long recommendationId;
 
 
 
