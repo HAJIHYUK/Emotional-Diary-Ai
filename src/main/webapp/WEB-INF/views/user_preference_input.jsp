@@ -13,6 +13,7 @@
         <label for="userId">유저 ID</label>
         <input type="text" id="userId" name="userId" required>
         <button type="button" id="loadPreferenceBtn">선호도 조회</button>
+        <button type="button" id="autoPreferenceBtn">유저 클릭이벤트 기반 선호도 자동저장 테스트</button>
         <label for="category">카테고리</label>
         <input type="text" id="category" name="category" required>
         <label for="genres">장르/소분류(쉼표로 구분)</label>
@@ -78,6 +79,18 @@ document.getElementById('loadPreferenceBtn').addEventListener('click', function(
                 });
             }
             document.getElementById('preferenceTableWrap').style.display = 'block';
+        })
+        .catch(err => alert('에러 발생: ' + err));
+});
+
+document.getElementById('autoPreferenceBtn').addEventListener('click', function() {
+    fetch('/api/user-preference/preferenceTest', {
+        method: 'POST'
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.status === 0 ? '자동저장 성공!' : '자동저장 실패: ' + data.message);
+        if(data.status === 0) location.reload();
         })
         .catch(err => alert('에러 발생: ' + err));
 });

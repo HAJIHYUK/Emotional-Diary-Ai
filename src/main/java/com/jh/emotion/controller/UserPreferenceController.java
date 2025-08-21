@@ -3,11 +3,11 @@ package com.jh.emotion.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jh.emotion.dto.SuccessResponse;
@@ -37,5 +37,13 @@ public class UserPreferenceController {
         List<UserPreferenceResponseDto> preferences = userPreferenceService.getUserPreference(userId);
         return ResponseEntity.ok(new SuccessResponse<>(0, "유저 선호도 조회 완료", preferences));
     }
+
+    //addUserPreferenceByClickEvent 테스트 
+    @PostMapping("/preferenceTest")
+    public ResponseEntity<SuccessResponse<Void>> savePreferenceTest(){
+        userPreferenceService.addUserPreferenceByClickEvent((1L));
+        return ResponseEntity.ok(new SuccessResponse<>(0, "유저 클릭이벤트 자동저장 완료", null));
+    }
+
 
 }

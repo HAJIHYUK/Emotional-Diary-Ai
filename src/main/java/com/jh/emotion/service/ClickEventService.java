@@ -52,4 +52,15 @@ public class ClickEventService {
         userClickEventRepository.save(userClickEvent);
         log.info("[ClickEvent] 저장 완료: {}", userClickEvent);
     }
+
+    
+
+
+
+
+
+
+
+
+
 }

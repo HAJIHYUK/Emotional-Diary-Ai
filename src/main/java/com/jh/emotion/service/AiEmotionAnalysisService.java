@@ -4,14 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -58,13 +57,29 @@ public class AiEmotionAnalysisService {
     
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final PageRequest pageRequest = PageRequest.of(0, 20); // 최근 20개 추천 정보 조회 페이지 설정
+
+    //최근 20개 추천 정보 조회 (중복 제거)
+    public List<String> getRecentRecommendations(Long userId) {
+        List<String> recentTitles = recommendationRepository.findRecentRecommendationsByUserId(userId, PageRequest.of(0, 30)); // 최근 30개 추천 정보 조회
+        return recentTitles.stream().distinct().limit(20).toList(); // 중복 제거 
+    }
     
+
+
     /**
      * Gemini 2.0 API를 사용하여 텍스트에서 감정을 분석합니다.
      */
     @Transactional(readOnly = false)
     public EmotionAnalysisResultDto analyzeEmotion(Long userId, Long diaryId) throws JsonProcessingException {
+        List<String> recentRecommendations = getRecentRecommendations(userId);
+        String ExcludeRecommendationTitle = ""; // 최근 20개 추천 정보 (제외할 추천 정보)
+        for (String title : recentRecommendations) { // 최근 20개 추천 정보 (제외할 추천 정보) 생성
+            ExcludeRecommendationTitle += title + ",";
+        }
+        
         log.info("[analyzeEmotion] 서비스에 전달된 diaryId: {}", diaryId);
+        log.info("[ExcludeRecommendationTitle] 최근 20개 추천 정보 제외할 추천 정보: {}", ExcludeRecommendationTitle);
         String url = UriComponentsBuilder.fromHttpUrl(GEMINI_API_URL)
                 .queryParam("key", apiKey)
                 .toUriString();
@@ -99,7 +114,9 @@ public class AiEmotionAnalysisService {
         ObjectNode textPart = partsArray.addObject();
         textPart.put("text",
             "text의 감정을 분석하고 감정은 여러개일 수 있어 감정은 기쁨,슬픔,분노,불안,놀람,역겨움,중립이 있고 감정level:0~10 confidence은 너의 분석신뢰도 이고 ratio은 감정 비율맞춰서 분석해, 유저 위치와 유저 취향 정보를 참고해서 " +
-            "취향에 맞는 3~6개, 취향 외의 것 2~4개를 추천해줘. " +
+            "취향에 맞는 3~6개, 취향 외의 것 2~4개를 추천해줘." +
+            "추천 정보는 최근 20개 추천 정보 제외 추천 정보를 추천해줘." +
+            "최근20개:"+ ExcludeRecommendationTitle + 
             "아래와 같이 카테고리별로 추천 기준을 반드시 지켜줘:\n" +
             "type(대분류)기준 ex: MOVIE, MUSIC, CAFE, RESTAURANT, FOOD, YOUTUBE, ENTERTAINMENT, PLACE, WALKING_TRAIL, ACTIVITY, non_matching_preferences\n" +
             "genre(소분류)기준 ex: ACTION, TERRACE, DESSERT 등 Cafe-Desert같이 이런거 말고 단일로 분류해줘 예를들어 MOVIE면 ACTION 같은거야 영어로만보내줘  " +
