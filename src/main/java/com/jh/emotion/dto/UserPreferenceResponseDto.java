@@ -9,6 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class UserPreferenceResponseDto {
 
+    private Long userPreferenceId;
     private String category;
     private String genre;
     private String type;

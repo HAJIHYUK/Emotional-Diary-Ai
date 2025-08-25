@@ -116,7 +116,7 @@ public class AiEmotionAnalysisService {
             "text의 감정을 분석하고 감정은 여러개일 수 있어 감정은 기쁨,슬픔,분노,불안,놀람,역겨움,중립이 있고 감정level:0~10 confidence은 너의 분석신뢰도 이고 ratio은 감정 비율맞춰서 분석해, 유저 위치와 유저 취향 정보를 참고해서 " +
             "취향에 맞는 3~6개, 취향 외의 것 2~4개를 추천해줘." +
             "추천 정보는 최근 20개 추천 정보 제외 추천 정보를 추천해줘." +
-            "최근20개:"+ ExcludeRecommendationTitle + 
+            "최근20개:"+ ExcludeRecommendationTitle +  // 최근 20개 추천 정보 제외
             "아래와 같이 카테고리별로 추천 기준을 반드시 지켜줘:\n" +
             "type(대분류)기준 ex: MOVIE, MUSIC, CAFE, RESTAURANT, FOOD, YOUTUBE, ENTERTAINMENT, PLACE, WALKING_TRAIL, ACTIVITY, non_matching_preferences\n" +
             "genre(소분류)기준 ex: ACTION, TERRACE, DESSERT 등 Cafe-Desert같이 이런거 말고 단일로 분류해줘 예를들어 MOVIE면 ACTION 같은거야 영어로만보내줘  " +

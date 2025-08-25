@@ -69,6 +69,7 @@ public class UserPreferenceService {
 
         for(UserPreference userPreference : userPreferences) {
             UserPreferenceResponseDto userPreferenceDto = new UserPreferenceResponseDto();
+            userPreferenceDto.setUserPreferenceId(userPreference.getUserPreferenceId());
             userPreferenceDto.setCategory(userPreference.getCategory().toString());
             userPreferenceDto.setGenre(userPreference.getGenre());
             userPreferenceDto.setType(userPreference.getType().toString());
@@ -78,6 +79,24 @@ public class UserPreferenceService {
 
         return userPreferenceDtos;
     }
+
+    //유저 선호도 삭제 (현재 클릭 이벤트 연관된건 삭제가 안됨 추후 필요시 클릭이벤트에 boolean 넣어서 비활성화, 외래키 제약걸기는 힘들어서 genre를 기준으로 비활성화)
+    @Transactional(readOnly = false)
+    public void deleteUserPreference(Long userId, List<Long> userPreferenceId) {
+        //유저 아이디 조회
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        
+        for(Long upid : userPreferenceId) {
+            UserPreference userPreference = userPreferenceRepository.findById(upid)
+                .orElseThrow(() -> new EntityNotFoundException("User preference not found"));
+            userPreferenceRepository.delete(userPreference);
+        }
+        
+            
+    }
+
+
 
 
     // 유저 클릭 이벤트 기반 유저 선호도 자동 추가 (최근 30일 이내 클릭 이벤트 기준 동일 genre 5개 이상 조회시 유저 선호도 자동저장)
