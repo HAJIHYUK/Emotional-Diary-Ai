@@ -31,7 +31,7 @@ public class EmotionAnalysisController {
     @PostMapping("/analyze")
     public ResponseEntity<SuccessResponse<EmotionAnalysisResultDto>> analyzeEmotion(@Valid @RequestBody EmotionAnalysisRequestDto request, @RequestParam("userId") Long userId) throws JsonProcessingException {
         log.info("감정 분석 요청: {}", request.getDiaryRecordId());
-        EmotionAnalysisResultDto emotionAnalysisResultDto = aiEmotionAnalysisService.analyzeEmotion(userId,request.getDiaryRecordId());
+        EmotionAnalysisResultDto emotionAnalysisResultDto = aiEmotionAnalysisService.analyzeEmotionAndRecommend(userId,request.getDiaryRecordId());
         return ResponseEntity.ok(new SuccessResponse<>(0, "감정 분석 완료 및 저장후 결과 반환", emotionAnalysisResultDto));
     }
 

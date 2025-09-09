@@ -28,6 +28,8 @@ public class DiaryService {
 
     private final DiaryRecordRepository diaryRecordRepository;
     private final UserRepository userRepository;
+
+    private final HashService hashService;
     
 
     //일기 작성 후 최종저장
@@ -36,6 +38,7 @@ public class DiaryService {
         User user = userRepository.findById(diaryWriteDto.getUserId())
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
+        String contentHash = hashService.generateContentHash(diaryWriteDto.getContent(), user.getLocation());
         DiaryRecord diaryRecord = new DiaryRecord();
         diaryRecord.setUser(user);
         diaryRecord.setDraft(false);
@@ -43,6 +46,7 @@ public class DiaryService {
         diaryRecord.setContent(diaryWriteDto.getContent());
         diaryRecord.setWeather(diaryWriteDto.getWeather());
         diaryRecord.setEntryDate(diaryWriteDto.getEntryDate());
+        diaryRecord.setContentHash(contentHash);
         diaryRecordRepository.save(diaryRecord);
 
         return diaryRecord;
@@ -137,4 +141,6 @@ public class DiaryService {
         diaryRecordRepository.deleteById(diaryId);
         return "일기가 성공적으로 삭제되었습니다.";
     }
+
+    
 }

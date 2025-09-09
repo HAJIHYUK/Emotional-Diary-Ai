@@ -15,6 +15,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -24,7 +25,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "diary_record")
+@Table(
+    name = "diary_record",
+    indexes = {
+        @Index(name = "idx_content_hash", columnList = "contentHash")
+    } // 해시값 인덱스 추가
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -64,6 +70,9 @@ public class DiaryRecord {//일기 정보 (사용자 일기)
 
     @Column(nullable = true)
     private String aiComment; // AI 코멘트
+
+    @Column(length = 64)
+    private String contentHash; // (일기+사용자위치(지역)) 해시값 저장
 
     @CreationTimestamp
     private LocalDateTime createdAt; // 일기 작성 날짜(글을 쓴 당일)

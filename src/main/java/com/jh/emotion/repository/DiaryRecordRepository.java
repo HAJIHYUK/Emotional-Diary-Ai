@@ -1,6 +1,7 @@
 package com.jh.emotion.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,6 +18,7 @@ public interface DiaryRecordRepository extends JpaRepository<DiaryRecord,Long> {
     @Query("SELECT d FROM DiaryRecord d LEFT JOIN FETCH d.emotions WHERE d.diaryRecordId = :diaryRecordId")
     DiaryRecord findWithEmotionsById(@Param("diaryRecordId") Long diaryRecordId);
 
-
+    Optional<DiaryRecord> findByContentHash(String contentHash);
     
+    Optional<DiaryRecord> findTopByContentHashOrderByCreatedAtDesc(String contentHash);
 } 
