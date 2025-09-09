@@ -95,7 +95,7 @@ public class AiEmotionAnalysisService {
         String text = diaryRecord.getContent();
 
         // 1. L1(Redis) 캐시 조회
-        String cachedResult = cachingService.getCachedResult(text, null);
+        String cachedResult = cachingService.getCachedResult(text);
         if (cachedResult != null) {
             JsonNode emotionResultNode = objectMapper.readTree(cachedResult);
             String hash = HashService.generateContentHash(text);
@@ -121,7 +121,7 @@ public class AiEmotionAnalysisService {
             resultNode.put("comment", existingRecord.getAiComment());
 
             // L1 캐시에 저장
-            cachingService.setCachedResult(text, null, objectMapper.writeValueAsString(resultNode));
+            cachingService.setCachedResult(text, objectMapper.writeValueAsString(resultNode));
             
             // 새로운 다이어리에 결과 저장 (해시는 저장할 필요 없음, 이미 동일 콘텐츠 존재)
             return saveEmotionAnalysisResult(diaryId, resultNode, hash);
@@ -129,7 +129,7 @@ public class AiEmotionAnalysisService {
         
         // 3. API 호출하여 감정 분석
         JsonNode emotionResultNode = callGeminiForEmotionAnalysis(text);
-        cachingService.setCachedResult(text, null, objectMapper.writeValueAsString(emotionResultNode));
+        cachingService.setCachedResult(text, objectMapper.writeValueAsString(emotionResultNode));
 
         // 감정 분석 결과 및 해시 저장
         return saveEmotionAnalysisResult(diaryId, emotionResultNode, hash);
