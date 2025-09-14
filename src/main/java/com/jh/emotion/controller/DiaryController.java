@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody; // import 추가
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,7 +34,7 @@ public class DiaryController {
     private final AiEmotionAnalysisService aiRecommendationService;
     //일기 작성
     @PostMapping("/write")
-    public ResponseEntity<SuccessResponse<Map<String, Object>>> writeDiary(DiaryWriteDto dto) {
+    public ResponseEntity<SuccessResponse<Map<String, Object>>> writeDiary(@RequestBody DiaryWriteDto dto) { // @RequestBody 추가
         DiaryRecord record = diaryService.createDiaryRecord(dto);
         Map<String, Object> data = new HashMap<>();
         data.put("recordId", record.getDiaryRecordId()); //일기 번호
@@ -56,7 +57,7 @@ public class DiaryController {
 
     //일기 상세 수정
     @PostMapping("/update")
-    public ResponseEntity<SuccessResponse<Void>> updateDiary(@RequestParam("diaryId") Long diaryId, DiaryWriteDto dto) {
+    public ResponseEntity<SuccessResponse<Void>> updateDiary(@RequestParam("diaryId") Long diaryId, @RequestBody DiaryWriteDto dto) { // @RequestBody 추가
         diaryService.updateDiaryRecord(diaryId, dto);
         return ResponseEntity.ok(new SuccessResponse<>(0, "수정 완료", null));
     }

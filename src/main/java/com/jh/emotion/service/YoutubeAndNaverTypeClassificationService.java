@@ -70,7 +70,7 @@ public class YoutubeAndNaverTypeClassificationService {
             if (link != null && !link.contains("smartstore") && !link.contains("blog") ) {
                 return link;
             }
-            // 위에 검색 결과가 없으면 수원으로 재검색 인데 수정해야됨 나중에 사용자 위치 기반으로 지역명 가져와야됨 
+            // ~동으로 검색하는데 위에 검색 결과가 없으면 대분류 로 다시 가서 수원으로 재검색 인데 수정해야됨 나중에 사용자 위치 기반으로 지역명 가져와야됨 
             link = naverSearchService.selectBestLink(naverSearchService.searchPlaceLinks(title, 10, "수원"));
             if (link != null) {
                 return link;

@@ -9,16 +9,16 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.jh.emotion.entity.DiaryRecord;
+import com.jh.emotion.entity.User;
 
 @Repository
-public interface DiaryRecordRepository extends JpaRepository<DiaryRecord,Long> {
+public interface DiaryRecordRepository extends JpaRepository<DiaryRecord, Long> {
+    
     List<DiaryRecord> findByUser_UserId(Long userId);
 
-    // 감정 리스트를 fetch join으로 DiaryRecord와 함께 한 번에 가져오기
-    @Query("SELECT d FROM DiaryRecord d LEFT JOIN FETCH d.emotions WHERE d.diaryRecordId = :diaryRecordId")
-    DiaryRecord findWithEmotionsById(@Param("diaryRecordId") Long diaryRecordId);
+    @Query("SELECT dr FROM DiaryRecord dr LEFT JOIN FETCH dr.emotions WHERE dr.diaryRecordId = :diaryId")
+    DiaryRecord findWithEmotionsById(@Param("diaryId") Long diaryId);
 
-    Optional<DiaryRecord> findByContentHash(String contentHash);
-    
-    Optional<DiaryRecord> findTopByContentHashOrderByCreatedAtDesc(String contentHash);
+    // 자기 자신을 제외하고 동일한 해시값을 가진 가장 최신의 DiaryRecord를 찾음 (L2 캐싱용 버그 수정: 자기호출 문제 해결)
+    Optional<DiaryRecord> findTopByContentHashAndDiaryRecordIdNotOrderByCreatedAtDesc(String contentHash, Long diaryRecordId);
 } 

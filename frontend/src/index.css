@@ -1,68 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* 파스텔 테마 색상 팔레트 (가독성 개선) */
+  --background-color: #fff0f5; /* 딸기 우유 배경 */
+  --component-bg-color: #ffffff; /* 카드, 입력 필드 등 */
+  --primary-color: #ffc0cb; /* 파스텔 핑크 */
+  --primary-hover-color: #ffb3ba; /* 조금 더 진한 파스텔 핑크 */
+  --accent-color: #b0e0e6; /* 파스텔 블루 */
+  --accent-hover-color: #a3d5dd; /* 조금 더 진한 파스텔 블루 */
+  --text-color: #4a4a4a; /* 더 진한 회색으로 가독성 향상 */
+  --text-light-color: #8b8b8b; /* 더 진한 연한 회색으로 가독성 향상 */
+  --border-color: #f2f2f2; /* 매우 연한 회색 테두리 */
+  --sidebar-header-color: #E57498; /* 가독성을 위한 진한 핑크 */
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  --font-family: 'Noto Sans KR', sans-serif;
+  --border-radius-lg: 16px;
+  --border-radius-md: 12px;
+  --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.05);
+  --shadow-medium: 0 8px 25px rgba(0, 0, 0, 0.08);
 }
 
 body {
   margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Main App Layout --- */
+.app-container {
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  height: 100vh;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.sidebar {
+  width: 250px;
+  flex-shrink: 0; /* 너비가 줄어들지 않도록 고정 */
+  background-color: var(--component-bg-color);
+  border-right: 1px solid var(--border-color);
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
+.content-area {
+  flex-grow: 1;
+  padding: 3rem;
+  overflow-y: auto;
+}
+
+/* --- Sidebar Styles (가독성 개선) --- */
+.sidebar-header {
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 3rem;
+  color: var(--sidebar-header-color);
+}
+
+.sidebar-nav a {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.2rem;
+  margin-bottom: 0.8rem;
+  border-radius: var(--border-radius-md);
+  text-decoration: none;
+  color: var(--text-color); /* 기본 텍스트 색상으로 변경하여 가독성 확보 */
   font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  transition: all 0.2s ease-in-out;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.sidebar-nav a:hover {
+  background-color: #fce4ec; /* 연한 핑크 배경 */
+  color: var(--sidebar-header-color); /* 호버 시에도 진한 핑크로 변경 */
+  transform: translateX(5px);
+}
+
+.sidebar-nav a.active {
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-hover-color));
+  color: white;
+  box-shadow: 0 5px 15px rgba(255, 192, 203, 0.4);
+}
+
+.sidebar-nav a .nav-icon {
+  margin-right: 1rem;
+  font-size: 1.3rem;
+}
+
+/* --- Custom Card Styles --- */
+.card {
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--border-radius-lg) !important;
+  box-shadow: var(--shadow-light) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-medium) !important;
+}
+
+/* --- Custom Button Styles (가독성 개선) --- */
+.btn {
+  border-radius: var(--border-radius-md) !important;
+  font-weight: 500 !important;
+  padding: 0.7rem 1.5rem !important;
+  transition: all 0.2s ease !important;
+  border: none !important; /* 테두리 제거로 깔끔하게 */
+}
+
+.btn-primary {
+  background-color: var(--sidebar-header-color) !important;
+  color: white !important;
+}
+
+.btn-primary:hover {
+  background-color: #D66086 !important; /* 더 진한 핑크 */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(229, 116, 152, 0.4) !important;
+}
+
+/* --- Form Styles --- */
+.form-control {
+    border-radius: var(--border-radius-md) !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 0.8rem 1rem !important;
+}
+.form-control:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 0.25rem rgba(255, 192, 203, 0.2) !important;
 }

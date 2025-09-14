@@ -82,7 +82,7 @@ public class AiEmotionAnalysisService {
      * 감정 분석을 수행하고 결과를 저장하는 메서드 (하이브리드 캐싱 적용)
      * 1. L1 캐시 (Redis) 조회
      * 2. L2 캐시 (DB의 contentHash) 조회
-     * 3. Gemini API 호출
+     * 3. Gemini API 호출 하여 감정 분석 결과 반환
      * @param userId 유저 ID
      * @param diaryId 일기 ID
      * @return 감정 분석 결과 DTO
@@ -94,21 +94,24 @@ public class AiEmotionAnalysisService {
             .orElseThrow(() -> new EntityNotFoundException("DiaryRecord not found"));
         String text = diaryRecord.getContent();
 
+
         // 1. L1(Redis) 캐시 조회
         String cachedResult = cachingService.getCachedResult(text);
         if (cachedResult != null) {
             JsonNode emotionResultNode = objectMapper.readTree(cachedResult);
             String hash = HashService.generateContentHash(text);
+            log.info("L1 캐시 조회 결과: {}", cachedResult);
             return saveEmotionAnalysisResult(diaryId, emotionResultNode, hash);
         }
 
-        // 2. L2 캐시 (DB contentHash) 조회
+        // 2. L2 캐시 (DB contentHash) 조회 (셀프 호출문제 해결 O : Repository 수정)
         String hash = HashService.generateContentHash(text);
-        Optional<DiaryRecord> existingDiaryRecordOpt = diaryRecordRepository.findTopByContentHashOrderByCreatedAtDesc(hash);
+        // 자기 자신을 제외하고 동일한 해시를 가진 다른 레코드를 찾도록 수정
+        Optional<DiaryRecord> existingDiaryRecordOpt = diaryRecordRepository.findTopByContentHashAndDiaryRecordIdNotOrderByCreatedAtDesc(hash, diaryId);
 
-        if (existingDiaryRecordOpt.isPresent()) {
+        if (existingDiaryRecordOpt.isPresent()) { // 존재시 에만 캐시에 저장!
             DiaryRecord existingRecord = existingDiaryRecordOpt.get();
-            ObjectNode resultNode = objectMapper.createObjectNode();
+            ObjectNode resultNode = objectMapper.createObjectNode(); // 추후 DTO (POJO)로 변경 해보기
             ArrayNode emotionsNode = resultNode.putArray("emotions");
             for (Emotion e : existingRecord.getEmotions()) {
                 ObjectNode emotionNode = emotionsNode.addObject();
@@ -122,14 +125,14 @@ public class AiEmotionAnalysisService {
 
             // L1 캐시에 저장
             cachingService.setCachedResult(text, objectMapper.writeValueAsString(resultNode));
-            
+            log.info("L2 캐시 조회 결과: {}", objectMapper.writeValueAsString(resultNode));
             // 새로운 다이어리에 결과 저장 (해시는 저장할 필요 없음, 이미 동일 콘텐츠 존재)
             return saveEmotionAnalysisResult(diaryId, resultNode, hash);
         }
         
         // 3. API 호출하여 감정 분석
         JsonNode emotionResultNode = callGeminiForEmotionAnalysis(text);
-        cachingService.setCachedResult(text, objectMapper.writeValueAsString(emotionResultNode));
+        cachingService.setCachedResult(text, objectMapper.writeValueAsString(emotionResultNode)); 
 
         // 감정 분석 결과 및 해시 저장
         return saveEmotionAnalysisResult(diaryId, emotionResultNode, hash);
@@ -155,8 +158,8 @@ public class AiEmotionAnalysisService {
         ObjectNode textPart = partsArray.addObject();
         textPart.put("text",
             "text의 감정을 분석하고 감정은 여러개일 수 있어 감정은 기쁨,슬픔,분노,불안,놀람,역겨움,중립이 있고 감정level:0~10 confidence은 너의 분석신뢰도 이고 ratio은 감정 비율맞춰서 분석해." +
-            "반드시 아래 JSON 형식으로만 응답해. 다른 설명이나 텍스트는 절대 포함하지 마.\n" +
-            "JSON형식:{emotions:[{label,level,confidence,description,ratio}], comment:칭찬,위로 멘트 정성껏작성} " +
+            "반드시 아래 JSON 형식으로만 응답해. 다른 설명이나 텍스트는 절대 포함하지 마. comment 필드는 필수적으로 포함해야 해.\n" +
+            "JSON형식:{emotions:[{label,level,confidence,description,ratio}], comment:\"일기에 대한 긍정적이고 따뜻한 코멘트 한 문장 작성.\"} " +
             "text:" + text
         );
 
@@ -172,6 +175,10 @@ public class AiEmotionAnalysisService {
 
         JsonNode jsonResponse = objectMapper.readTree(response.getBody());
         String content_text = jsonResponse.path("candidates").path(0).path("content").path("parts").path(0).path("text").asText();
+        
+        // --- ↓ [디버깅 로그 추가] Gemini API의 실제 응답 내용을 확인하기 위한 로그 ---
+        log.info("Gemini API Raw Response: {}", content_text); 
+        
         String cleanedContent = content_text
                 .replaceAll("```json\\s*", "")
                 .replaceAll("```\\s*", "")
@@ -247,6 +254,7 @@ public class AiEmotionAnalysisService {
             "아래와 같이 카테고리별로 추천 기준을 반드시 지켜줘:\n" +
             "type(대분류)기준 ex: MOVIE, MUSIC, CAFE, RESTAURANT, FOOD, YOUTUBE, ENTERTAINMENT, PLACE, WALKING_TRAIL, ACTIVITY, non_matching_preferences\n" +
             "genre(소분류)기준 ex: ACTION, TERRACE, DESSERT 등 Cafe-Desert같이 이런거 말고 단일로 분류해줘 예를들어 MOVIE면 ACTION 같은거야 영어로만보내줘  " +
+            "reson은 꼭 한국어로 설명해야되" +
             "- CAFE, RESTAURANT, FOOD: 반드시 실제 네이버 플레이스/지도에서 검색 가능한 구체적인 종류/특징(예: '테라스 카페', '매운 갈비찜', '디저트 카페', '이탈리안 레스토랑')로만 추천해줘.검색기반 엔진이기때문에 '따뜻한'등과 '가성비', '저렴한', '분위기 좋은' 등 추상적 수식어는 절대 넣지 마. 반드시 실제 검색 가능한 키워드로만 추천해.\n" +
             "- YOUTUBE, ENTERTAINMENT, MOVIE, BOOK, MUSIC: 반드시 실제 존재하는 정확한 이름(정확한 영화/책/음악/채널명 등)으로만 추천해줘. 예를 들어, '기생충', 'BTS', '해리포터', 'Love Poem', '미움받을 용기'처럼 실제 검색 가능한 고유명사(정확한 제목/이름)만 추천해. '아이유 신나는 노래', '미스터리 스릴러 영화', '긍정 심리학 도서', '다큐멘터리 영화' 등 장르, 수식어, 추상적 표현은 절대 넣지 마.\n" +
             "- PLACE, WALKING_TRAIL, ACTIVITY: 반드시 '공원 산책로', '호수공원 산책로', '숲속 둘레길', '실내 클라이밍'처럼 장소의 **간단한 특징이나 종류, 활동의 구체적인 유형(실제 검색 가능한 키워드)만** 추천해줘. '도심 속', '아늑한', '자연과 함께하는' 등 불필요한 수식어나 추상적 표현은 절대 넣지 마. 위치(도시/동네 등)는 내부적으로만 참고하고, 추천 title, reason 등 모든 응답에 지역명(도시/동네 등)은 절대 포함하지 마.단 WALKING_TRAIL 분류 호출은 지역기반으로 정확한 공원명이나 장소명을 알려줘 \n" +
@@ -323,7 +331,14 @@ public class AiEmotionAnalysisService {
         // 중복으로 AI 검색 분석 사용시 기존 감정 삭제 후 새로 저장 (덮어쓰기)
         diaryRecord.getEmotions().clear();
         diaryRecord.getEmotions().addAll(emotions);
-        diaryRecord.setAiComment(result.path("comment").asText());
+        
+        // comment 필드가 있는지 확인하고, 없으면 기본값 설정
+        if (result.has("comment") && !result.get("comment").isNull()) {
+            diaryRecord.setAiComment(result.path("comment").asText());
+        } else {
+            diaryRecord.setAiComment("AI 코멘트를 생성하지 못했습니다."); // 기본값 설정
+        }
+
         diaryRecord.setEmotionAnalysisCount(diaryRecord.getEmotionAnalysisCount() + 1);
         if (contentHash != null) {
             diaryRecord.setContentHash(contentHash);

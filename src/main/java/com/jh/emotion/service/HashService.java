@@ -19,39 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class HashService {
 
-
-    /**
-     * 일기 내용과 위치를 합쳐서 SHA-256 해시값을 생성
-     * - 줄바꿈/유니코드 정규화/공백 압축/길이 접두어/버전 태깅
-     */
-    public static String generateContentHash(String content, String location) {
-        // 0) null 안전 처리
-        String c = content == null ? "" : content;
-        String l = location == null ? "" : location;
-
-        // 1) 정규화(줄바꿈 통일, 유니코드, 공백 압축, 소문자 통일)
-        c = normalizeContent(c);
-        l = normalizeLocation(l);
-
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-
-            // 2) 버전 접두사로 도메인 분리(추천 알고리즘이 바뀌면 "reco-v2"로 교체)
-            md.update("reco-v1".getBytes(StandardCharsets.UTF_8));
-
-            // 3) 길이 접두어로 안전하게 경계를 표시(구분자 모호성 제거)
-            updateWithLengthPrefix(md, c);
-            updateWithLengthPrefix(md, l);
-
-            byte[] bytes = md.digest();
-            return toHex(bytes);
-        } catch (Exception e) {
-            throw new RuntimeException("해시 생성 실패", e);
-        }
-    }
-
     /**
      * 일기 내용만으로 SHA-256 해시값을 생성
+     * 줄바꿈/유니코드 정규화/공백 압축/길이 접두어/버전 
      */
     public static String generateContentHash(String content) {
         // 0) null 안전 처리

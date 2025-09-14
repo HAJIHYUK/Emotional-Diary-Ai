@@ -20,6 +20,7 @@ public class DiaryDetailDto { // 일기 상세 조회 DTO
     private String createdAt; // 일기 작성 날짜
     private LocalDateTime updatedAt; // 일기 수정 날짜
     private List<EmotionDto> emotions; // 감정 리스트
+    private String aiComment; // AI 코멘트
 
     // 일기 작성 날짜 포맷 변환
     public void setCreatedAt(LocalDateTime createdAt) {

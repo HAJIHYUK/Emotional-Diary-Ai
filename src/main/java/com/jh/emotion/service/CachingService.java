@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CachingService { // redis 를 이용한 캐시 서비스 (중복방지 + 캐시 효율적 사용)
     private final StringRedisTemplate redisTemplate;
-    private static final long CACHE_TTL = 1L; // 캐시 유효시간(시간)
+    private static final long CACHE_TTL = 24L; // 캐시 유효시간(시간)
 
     /**
      * 캐시에서 결과 조회

@@ -62,7 +62,9 @@ public class DiaryService {
             diaryListDto.setDiaryRecordId(diaryRecord.getDiaryRecordId());
             diaryListDto.setEntryDate(diaryRecord.getEntryDate());
             diaryListDto.setWeather(diaryRecord.getWeather());
-            // 감정 리스트 변환
+            diaryListDto.setContent(diaryRecord.getContent()); 
+
+            // 감정 리스트 변환 
             List<EmotionDto> emotionDtos = new ArrayList<>();
             List<Emotion> emotions = diaryRecord.getEmotions();
             if (emotions != null && !emotions.isEmpty()) {
@@ -76,7 +78,8 @@ public class DiaryService {
                     ));
                 }
             }
-            diaryListDto.setEmotions(emotionDtos);
+            diaryListDto.setEmotions(emotionDtos); // emotions 리스트 설정
+
             diaryListDto.setDraft(diaryRecord.isDraft());
             diaryListDto.setCreatedAt(diaryRecord.getCreatedAt());
             diaryListDtos.add(diaryListDto);
@@ -101,6 +104,7 @@ public class DiaryService {
         diaryDetailDto.setEmotionAnalysisCount(diaryRecord.getEmotionAnalysisCount());
         diaryDetailDto.setCreatedAt(diaryRecord.getCreatedAt());
         diaryDetailDto.setUpdatedAt(diaryRecord.getUpdatedAt());
+        diaryDetailDto.setAiComment(diaryRecord.getAiComment());
 
         // 감정 리스트 변환
         List<EmotionDto> emotionDtos = new ArrayList<>();

@@ -17,11 +17,7 @@ public class DiaryListDto { // 일기 목록 조회 DTO
     private LocalDate entryDate; // 일기 작성 날짜
     private String weather; // 날씨 정보
     private List<EmotionDto> emotions; // 감정 리스트
+    private String content; // 내용
     private boolean isDraft; // 임시저장 여부
-    private String createdAt; // 일기 작성 날짜
-
-    // 일기 작성 날짜 포맷 변환
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt != null ? createdAt.toLocalDate().toString() : null;
-    }
+    private LocalDateTime createdAt; // 일기 작성 날짜 (시간 포함)
 }
