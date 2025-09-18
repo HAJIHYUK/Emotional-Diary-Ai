@@ -48,10 +48,13 @@ export const createDiary = (diaryData) => {
  * @param {{content: string}} diaryData - {내용}
  */
 export const updateDiary = (diaryId, diaryData) => {
-  const formData = new FormData();
-  formData.append('content', diaryData.content);
-
-  return api.post(`/api/diary/update?diaryId=${diaryId}`, formData);
+  const payload = {
+    userId: MOCK_USER_ID, // 누락되었던 유저 ID 추가
+    content: diaryData.content,
+    weather: diaryData.weather || null,
+    entryDate: diaryData.entryDate || null,
+  };
+  return api.post(`/api/diary/update?diaryId=${diaryId}`, payload);
 };
 
 /**

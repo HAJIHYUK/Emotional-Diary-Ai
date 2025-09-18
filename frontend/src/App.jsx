@@ -17,6 +17,7 @@ function App() {
           <Routes>
             <Route path="/" element={<DiaryList />} />
             <Route path="/write" element={<DiaryWrite />} />
+            <Route path="/edit/:id" element={<DiaryWrite />} /> {/* 수정 경로 추가 */}
             <Route path="/diary/:id" element={<DiaryDetail />} />
             <Route path="/stats" element={<EmotionStats />} />
             <Route path="/recommendations" element={<Recommendations />} />

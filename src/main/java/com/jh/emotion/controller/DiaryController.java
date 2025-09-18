@@ -20,6 +20,7 @@ import com.jh.emotion.dto.UserRecommendationResponseDto;
 import com.jh.emotion.entity.DiaryRecord;
 import com.jh.emotion.service.AiEmotionAnalysisService;
 import com.jh.emotion.service.DiaryService;
+import com.jh.emotion.service.RecommendationService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,10 +32,11 @@ import lombok.extern.slf4j.Slf4j;
 public class DiaryController {
 
     private final DiaryService diaryService;
-    private final AiEmotionAnalysisService aiRecommendationService;
+    private final RecommendationService recommendationService; // RecommendationService 주입
+
     //일기 작성
     @PostMapping("/write")
-    public ResponseEntity<SuccessResponse<Map<String, Object>>> writeDiary(@RequestBody DiaryWriteDto dto) { // @RequestBody 추가
+    public ResponseEntity<SuccessResponse<Map<String, Object>>> writeDiary(@RequestBody DiaryWriteDto dto) {
         DiaryRecord record = diaryService.createDiaryRecord(dto);
         Map<String, Object> data = new HashMap<>();
         data.put("recordId", record.getDiaryRecordId()); //일기 번호
@@ -72,7 +74,7 @@ public class DiaryController {
     //일기에 있는 추천 정보 조회
     @GetMapping("/recommendations")
     public ResponseEntity<SuccessResponse<List<UserRecommendationResponseDto>>> getRecommendations(@RequestParam("diaryId") Long diaryId) {
-        List<UserRecommendationResponseDto> recommendations = aiRecommendationService.getRecommendations(diaryId);
+        List<UserRecommendationResponseDto> recommendations = recommendationService.getRecommendations(diaryId);
         return ResponseEntity.ok(new SuccessResponse<>(0, "추천 정보 조회 완료", recommendations));
     }
 

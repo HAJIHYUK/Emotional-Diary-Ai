@@ -16,7 +16,7 @@ public class JacksonConfig {
     @PostConstruct
     public void setUp() {
         objectMapper.registerModule(new JavaTimeModule());
-        // 날짜/시간을 배열이 아닌 ISO-8601 표준 문자열로 직렬화하도록 설정
+        // 날짜/시간을 배열이 아닌 ISO-8601 표준 문자열로 직렬화하도록 설정                                                                │
         objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 } 

@@ -1,10 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Row, Col, Card, Button, Spinner, Alert, Placeholder, ButtonGroup } from 'react-bootstrap';
+import { Row, Col, Card, Button, Spinner, Alert, Placeholder, ButtonGroup, Form } from 'react-bootstrap';
 import { getDiaryList } from '../api/diaryApi';
-import { FaFeatherAlt } from 'react-icons/fa';
+import { FaFeatherAlt, FaSync } from 'react-icons/fa';
 
-// 상세 페이지와 UI 일관성을 위한 날씨 맵
 const weatherMap = {
   '맑음': '맑음 ☀️',
   '흐림': '흐림 ☁️',
@@ -15,20 +14,28 @@ const weatherMap = {
   '천둥/번개': '천둥/번개 ⚡',
 };
 
+const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+// 날짜 포맷팅 헬퍼 함수
+const formatDateTime = (dateString) => {
+  const date = new Date(dateString);
+  return `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}. ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+};
+
 function DiaryList() {
   const [diaries, setDiaries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // 기본 정렬을 '만든 날짜순' (createdAt)으로 변경
-  const [sortType, setSortType] = useState('createdAt'); 
+  const [sortType, setSortType] = useState('createdAt');
+  
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('');
 
   useEffect(() => {
     const fetchDiaries = async () => {
       try {
         const response = await getDiaryList();
-        const diariesData = response.data && Array.isArray(response.data.data) ? response.data.data : [];
-        console.log('API에서 받은 일기 데이터:', diariesData);
-        setDiaries(diariesData);
+        setDiaries(response.data?.data || []);
       } catch (err) {
         setError('일기 목록을 불러오는 데 실패했습니다.');
       } finally {
@@ -38,37 +45,47 @@ function DiaryList() {
     fetchDiaries();
   }, []);
 
-  // 정렬 로직: 내림차순 (최신순)으로 설정
-  const sortedDiaries = useMemo(() => {
-    const newDiaries = [...diaries];
-    newDiaries.sort((a, b) => {
-      if (sortType === 'entryDate') {
-        const dateA = new Date(a.entryDate || a.createdAt).setHours(0, 0, 0, 0);
-        const dateB = new Date(b.entryDate || b.createdAt).setHours(0, 0, 0, 0);
-
-        if (dateB !== dateA) {
-          return new Date(b.entryDate || b.createdAt) - new Date(a.entryDate || a.createdAt);
-        }
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      } else {
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      }
+  const availableYears = useMemo(() => {
+    if (diaries.length === 0) return [];
+    const years = new Set();
+    diaries.forEach(diary => {
+      if (diary.createdAt) years.add(new Date(diary.createdAt).getFullYear());
+      if (diary.entryDate) years.add(new Date(diary.entryDate).getFullYear());
     });
-    return newDiaries;
-  }, [diaries, sortType]);
+    return Array.from(years).sort((a, b) => b - a);
+  }, [diaries]);
 
+  const filteredAndSortedDiaries = useMemo(() => {
+    const filteredDiaries = diaries.filter(diary => {
+      if (!selectedYear && !selectedMonth) return true;
+      const dateToFilter = new Date(sortType === 'entryDate' ? diary.entryDate : diary.createdAt);
+      const yearMatch = !selectedYear || dateToFilter.getFullYear() === parseInt(selectedYear, 10);
+      const monthMatch = !selectedMonth || (dateToFilter.getMonth() + 1) === parseInt(selectedMonth, 10);
+      return yearMatch && monthMatch;
+    });
 
-  // 가장 비중이 높은 대표 감정의 이모지를 반환하는 함수
+    return filteredDiaries.sort((a, b) => {
+      if (sortType === 'entryDate') {
+        const dateA = new Date(a.entryDate || a.createdAt);
+        const dateB = new Date(b.entryDate || b.createdAt);
+        if (dateB.toDateString() !== dateA.toDateString()) {
+          return dateB - dateA;
+        }
+      }
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+  }, [diaries, sortType, selectedYear, selectedMonth]);
+
+  const handleResetFilter = () => {
+    setSelectedYear('');
+    setSelectedMonth('');
+  };
+
   const getDominantEmotionEmoji = (emotions) => {
     const emojiMap = { '기쁨': '😊', '슬픔': '😢', '분노': '😡', '불안': '😟', '사랑': '🥰', '평온': '😌' };
-    
-    if (!emotions || emotions.length === 0) {
-      return '🤔'; // 감정 정보가 없으면 기본 이모지
-    }
-
-    // 가장 percentage가 높은 감정을 찾음
-    const dominantEmotion = emotions.reduce((max, current) => (current.percentage > max.percentage ? current : max), emotions[0]);
-    return emojiMap[dominantEmotion.label] || '🤔';
+    if (!emotions || emotions.length === 0) return null;
+    const dominantEmotion = emotions.reduce((max, current) => (current.ratio > max.ratio ? current : max), emotions[0]);
+    return emojiMap[dominantEmotion.label] || null;
   };
 
   const renderSkeletons = () => (
@@ -81,41 +98,51 @@ function DiaryList() {
 
   return (
     <>
-      <div className="d-flex justify-content-between align-items-center mb-5">
-        <h1 className="fw-bold" style={{ color: 'var(--text-color)' }}>내 일기장</h1>
-        {/* 버튼 텍스트를 명확하게 수정하고, 기본값인 '만든 날짜순'을 먼저 표시 */}
-        <ButtonGroup>
-          <Button 
-            variant={sortType === 'createdAt' ? 'primary' : 'outline-secondary'} 
-            onClick={() => setSortType('createdAt')}
-          >
-            만든 날짜순
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <h1 className="fw-bold mb-0">내 일기장</h1>
+        
+        <div className="d-flex align-items-center gap-2">
+          <Form.Select size="sm" value={selectedYear} onChange={e => setSelectedYear(e.target.value)} style={{width: '100px'}}>
+            <option value="">년도</option>
+            {availableYears.map(year => <option key={year} value={year}>{year}년</option>)}
+          </Form.Select>
+
+          <Form.Select size="sm" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} style={{width: '90px'}}>
+            <option value="">월</option>
+            {months.map(month => <option key={month} value={month}>{month}월</option>)}
+          </Form.Select>
+
+          <Button variant="outline-secondary" size="sm" onClick={handleResetFilter} title="필터 초기화">
+            <FaSync />
           </Button>
-          <Button 
-            variant={sortType === 'entryDate' ? 'primary' : 'outline-secondary'} 
-            onClick={() => setSortType('entryDate')}
-          >
-            일기 날짜순
-          </Button>
-        </ButtonGroup>
+
+          <ButtonGroup>
+            <Button variant={sortType === 'createdAt' ? 'primary' : 'outline-secondary'} onClick={() => setSortType('createdAt')}>만든 날짜순</Button>
+            <Button variant={sortType === 'entryDate' ? 'primary' : 'outline-secondary'} onClick={() => setSortType('entryDate')}>일기 날짜순</Button>
+          </ButtonGroup>
+        </div>
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
 
       <Row>
-        {loading ? renderSkeletons() : sortedDiaries.length > 0 ? (
-          sortedDiaries.map((diary) => (
+        {loading ? renderSkeletons() : filteredAndSortedDiaries.length > 0 ? (
+          filteredAndSortedDiaries.map((diary) => (
             <Col lg={4} md={6} className="mb-4" key={diary.diaryRecordId}>
               <Card as={Link} to={`/diary/${diary.diaryRecordId}`} className="h-100 text-decoration-none">
                 <Card.Body>
                   <div className="d-flex justify-content-between align-items-start">
-                    <Card.Title className="mb-1 fw-bold" style={{color: 'var(--text-color)'}}>{new Date(diary.entryDate || diary.createdAt).toLocaleDateString('ko-KR')}</Card.Title>
+                    <div>
+                      <Card.Title className="mb-1 fw-bold" style={{color: 'var(--text-color)'}}>{new Date(diary.entryDate || diary.createdAt).toLocaleDateString('ko-KR')}</Card.Title>
+                      {sortType === 'createdAt' && (
+                        <small className="text-muted">만든 시간: {formatDateTime(diary.createdAt)}</small>
+                      )}
+                    </div>
                     <span style={{ fontSize: '1.8rem' }}>
                       {getDominantEmotionEmoji(diary.emotions)}
                     </span>
                   </div>
-                  {/* 날씨 표시에 weatherMap 사용 */}
-                  <Card.Subtitle className="text-muted fw-light">{weatherMap[diary.weather] || diary.weather || '날씨 기록 없음'}</Card.Subtitle>
+                  <Card.Subtitle className="mt-2 text-muted fw-light">{weatherMap[diary.weather] || diary.weather || '날씨 기록 없음'}</Card.Subtitle>
                   <hr style={{borderColor: 'var(--border-color)'}}/>
                   <Card.Text className="mt-3" style={{color: 'var(--text-light-color)'}}>
                     {diary.content.substring(0, 90)}...
@@ -129,7 +156,7 @@ function DiaryList() {
             <Card className="p-5">
                 <Card.Body>
                     <h2 className="fw-light mb-3">아직 비어있네요!</h2>
-                    <p className="text-muted mb-4">오늘의 감정을 기록하고, AI의 특별한 추천을 받아보세요.</p>
+                    <p className="text-muted mb-4">{selectedYear || selectedMonth ? '해당 기간에 작성된 일기가 없어요.' : '오늘의 감정을 기록하고, AI의 특별한 추천을 받아보세요.'}</p>
                     <Button as={Link} to="/write" size="lg"><FaFeatherAlt className="me-2"/>첫 일기 쓰러가기</Button>
                 </Card.Body>
             </Card>

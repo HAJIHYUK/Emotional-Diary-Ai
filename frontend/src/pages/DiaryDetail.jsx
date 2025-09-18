@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, Button, Spinner, Alert, Row, Col, ListGroup, Badge, Modal } from 'react-bootstrap';
 import { getDiaryDetail, getRecommendations, deleteDiary, analyzeDiaryEmotion } from '../api/diaryApi';
-import { FaRegCalendarAlt, FaCloudSun, FaHeart, FaMusic, FaFilm, FaBook, FaTrash, FaArrowLeft, FaMagic } from 'react-icons/fa';
+import { FaRegCalendarAlt, FaCloudSun, FaHeart, FaMusic, FaFilm, FaBook, FaTrash, FaArrowLeft, FaMagic, FaBrain, FaPencilAlt, FaLightbulb } from 'react-icons/fa';
 
 // --- Helper & Presentational Components ---
 
@@ -18,23 +18,25 @@ const weatherMap = {
 
 const EmotionDisplay = ({ emotions }) => {
   const emotionStyle = {
-    '기쁨': { bg: '#fff0f0', text: '#ff8a80', emoji: '😊' },
-    '슬픔': { bg: '#e3f2fd', text: '#448aff', emoji: '😢' },
-    '분노': { bg: '#fbe9e7', text: '#ff3d00', emoji: '😡' },
-    '불안': { bg: '#fff8e1', text: '#ffab00', emoji: '😟' },
-    '사랑': { bg: '#fce4ec', text: '#f50057', emoji: '🥰' },
-    '평온': { bg: '#e0f7fa', text: '#00b8d4', emoji: '😌' },
-    '기본': { bg: '#f5f5f5', text: '#616161', emoji: '🤔' },
+    '기쁨': { bg: '#FFFDE7', text: '#FBC02D' },      // 화사한 노란색
+    '슬픔': { bg: '#E0F7FA', text: '#0097A7' },      // 차분한 청록색
+    '분노': { bg: '#FFEBEE', text: '#D32F2F' },      // 톤 다운된 붉은색
+    '불안': { bg: '#F3E5F5', text: '#7B1FA2' },      // 깊은 보라색
+    '사랑': { bg: '#FCE4EC', text: '#D81B60' },      // 선명한 분홍색
+    '평온': { bg: '#E8F5E9', text: '#388E3C' },      // 편안한 녹색
+    '중립': { bg: '#ECEFF1', text: '#546E7A' },      // 세련된 블루-그레이
+    '기본': { bg: '#ECEFF1', text: '#546E7A' },
   };
+  const emojiMap = { '기쁨': '😊', '슬픔': '😢', '분노': '😡', '불안': '😟', '사랑': '🥰', '평온': '😌', '중립': '😐', '기본': '🤔' };
 
   return (
-    <div className="d-flex flex-wrap gap-2">
+    <div className="d-flex flex-wrap gap-2 mt-4">
       {(emotions || []).map((e, index) => {
         const style = emotionStyle[e.label] || emotionStyle['기본'];
         return (
-          <Badge key={index} pill style={{ backgroundColor: style.bg, color: style.text, padding: '0.6rem 1rem', fontSize: '0.9rem' }}>
-            {style.emoji} {e.label} ({(e.ratio * 100).toFixed(0)}%)
-          </Badge>
+          <span key={index} className="emotion-badge" style={{ backgroundColor: style.bg, color: style.text }}>
+            {emojiMap[e.label] || emojiMap['기본']} {e.label} ({(e.ratio * 100).toFixed(0)}%)
+          </span>
         );
       })}
     </div>
@@ -46,7 +48,7 @@ const RecommendationIcon = ({ type }) => {
   return iconMap[type] || null;
 };
 
-const PageHeader = ({ onAnalyze, isAnalyzing, emotionAnalysisCount, onDeleteClick }) => (
+const PageHeader = ({ onAnalyze, isAnalyzing, emotionAnalysisCount, onDeleteClick, onEditClick }) => (
   <Row className="align-items-center mb-4">
     <Col><h1 className="fw-bold">상세 보기</h1></Col>
     <Col xs="auto" className="d-flex gap-2">
@@ -56,8 +58,9 @@ const PageHeader = ({ onAnalyze, isAnalyzing, emotionAnalysisCount, onDeleteClic
           {isAnalyzing ? ' 분석 중...' : ' AI 분석하기'}
         </Button>
       )}
+      <Button variant="secondary" onClick={onEditClick}><FaPencilAlt className="me-2"/>수정</Button>
       <Button as={Link} to="/" variant="light"><FaArrowLeft className="me-2"/>목록으로</Button>
-      <Button variant="outline-danger" size="sm" onClick={onDeleteClick}><FaTrash/></Button>
+      <Button variant="danger" size="sm" onClick={onDeleteClick}><FaTrash/></Button>
     </Col>
   </Row>
 );
@@ -77,9 +80,11 @@ const DiaryContentCard = ({ diary }) => (
 );
 
 const AnalysisCard = ({ isAnalyzing, diary }) => (
-  <Card>
-    <Card.Header className="fw-bold">AI Comment</Card.Header>
+  <Card className="analysis-card">
     <Card.Body>
+      <Card.Title as="h5" className="fw-bold mb-4 d-flex align-items-center">
+        <FaBrain className="me-2" style={{ color: 'var(--primary-color)' }}/> AI의 마음 분석 리포트
+      </Card.Title>
       {isAnalyzing ? (
         <div className="text-center p-5">
           <Spinner animation="border" style={{color: 'var(--primary-color)'}}/>
@@ -87,7 +92,9 @@ const AnalysisCard = ({ isAnalyzing, diary }) => (
         </div>
       ) : diary.emotionAnalysisCount > 0 ? (
         <div>
-          <p className="mb-3 fst-italic">"{diary.aiComment}"</p>
+          <blockquote className="ai-comment-quote">
+            <p className="mb-0">{diary.aiComment}</p>
+          </blockquote>
           <EmotionDisplay emotions={diary.emotions} />
         </div>
       ) : (
@@ -101,7 +108,7 @@ const AnalysisCard = ({ isAnalyzing, diary }) => (
 );
 
 const RecommendationsCard = ({ recommendations }) => (
-  <Card>
+  <Card style={{ minHeight: '200px' }}>
     <Card.Header className="fw-bold">AI 추천 콘텐츠</Card.Header>
     <ListGroup variant="flush">
       {recommendations.length > 0 ? recommendations.map(rec => (
@@ -112,7 +119,12 @@ const RecommendationsCard = ({ recommendations }) => (
             <small className="text-muted">{rec.reason}</small>
           </div>
         </ListGroup.Item>
-      )) : <ListGroup.Item className="text-muted p-4 text-center">감정 분석을 완료하면 맞춤 콘텐츠를 추천해드려요.</ListGroup.Item>}
+      )) : (
+        <ListGroup.Item className="text-muted p-4 text-center d-flex flex-column justify-content-center align-items-center" style={{minHeight: '100px'}}>
+          <FaLightbulb size={25} className="mb-2" style={{color: 'var(--border-color)'}}/>
+          <span>감정 분석을 완료하면 맞춤 콘텐츠를 추천해드려요.</span>
+        </ListGroup.Item>
+      )}
     </ListGroup>
   </Card>
 );
@@ -250,6 +262,7 @@ function DiaryDetail() {
             isAnalyzing={isAnalyzing} 
             emotionAnalysisCount={diary.emotionAnalysisCount} 
             onDeleteClick={() => setShowDeleteModal(true)}
+            onEditClick={() => navigate(`/edit/${id}`, { state: { diary } })}
           />
           <DiaryContentCard diary={diary} />
           <Row>

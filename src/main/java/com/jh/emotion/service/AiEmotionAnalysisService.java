@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,15 +21,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jh.emotion.dto.EmotionAnalysisResultDto;
 import com.jh.emotion.dto.EmotionDto;
-import com.jh.emotion.dto.UserRecommendationResponseDto;
 import com.jh.emotion.entity.DiaryRecord;
 import com.jh.emotion.entity.Emotion;
-import com.jh.emotion.entity.Recommendation;
 import com.jh.emotion.entity.User;
 import com.jh.emotion.entity.UserPreference;
 import com.jh.emotion.enums.PreferenceType;
 import com.jh.emotion.repository.DiaryRecordRepository;
-import com.jh.emotion.repository.RecommendationRepository;
 import com.jh.emotion.repository.UserPreferenceRepository;
 import com.jh.emotion.repository.UserRepository;
 
@@ -47,9 +43,8 @@ public class AiEmotionAnalysisService {
     private final DiaryRecordRepository diaryRecordRepository;
     private final UserPreferenceRepository userPreferenceRepository;
     private final UserRepository userRepository;
-    private final RecommendationRepository recommendationRepository;
-    private final YoutubeAndNaverTypeClassificationService typeClassificationService;
     private final CachingService cachingService;
+    private final RecommendationService recommendationService; // RecommendationService 주입
     
 
     private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent";
@@ -157,7 +152,7 @@ public class AiEmotionAnalysisService {
         ArrayNode partsArray = content.putArray("parts");
         ObjectNode textPart = partsArray.addObject();
         textPart.put("text",
-            "text의 감정을 분석하고 감정은 여러개일 수 있어 감정은 기쁨,슬픔,분노,불안,놀람,역겨움,중립이 있고 감정level:0~10 confidence은 너의 분석신뢰도 이고 ratio은 감정 비율맞춰서 분석해." +
+            "text의 감정을 분석하고 감정은 여러개(1~5개)일 수 있어 감정은 기쁨,슬픔,분노,불안,놀람,역겨움,중립이 있고 감정level:0~10 confidence은 너의 분석신뢰도 이고 ratio은 감정 비율맞춰서 분석해." +
             "반드시 아래 JSON 형식으로만 응답해. 다른 설명이나 텍스트는 절대 포함하지 마. comment 필드는 필수적으로 포함해야 해.\n" +
             "JSON형식:{emotions:[{label,level,confidence,description,ratio}], comment:\"일기에 대한 긍정적이고 따뜻한 코멘트 한 문장 작성.\"} " +
             "text:" + text
@@ -208,15 +203,15 @@ public class AiEmotionAnalysisService {
             }
         }
 
-        // 최근 20개 추천 정보 제외용 타이틀 생성
-        List<String> recentRecommendations = getRecentRecommendations(userId);
+        // 최근 20개 추천 정보 제외용 타이틀 생성 (RecommendationService에 위임)
+        List<String> recentRecommendations = recommendationService.getRecentRecommendations(userId);
         String excludeRecommendationTitle = String.join(",", recentRecommendations);
 
         // Gemini API 호출하여 추천 생성
         JsonNode recommendationResultNode = callGeminiForRecommendations(emotions, userPreference, userLocation, excludeRecommendationTitle);
 
-        // 추천 정보 저장
-        saveRecommendations(diaryId, recommendationResultNode);
+        // 추천 정보 저장 (RecommendationService에 위임)
+        recommendationService.saveRecommendations(diaryId, recommendationResultNode);
     }
 
     /**
@@ -283,11 +278,8 @@ public class AiEmotionAnalysisService {
     }
 
 
-    //최근 20개 추천 정보 조회 (중복 제거)
-    public List<String> getRecentRecommendations(Long userId) {
-        List<String> recentTitles = recommendationRepository.findRecentRecommendationsByUserId(userId, PageRequest.of(0, 30)); // 최근 30개 추천 정보 조회
-        return recentTitles.stream().distinct().limit(20).toList(); // 중복 제거 
-    }
+    //최근 20개 추천 정보 조회 (중복 제거) -> RecommendationService로 이동
+    // public List<String> getRecentRecommendations(Long userId) { ... }
     
 
     /**
@@ -369,80 +361,5 @@ public class AiEmotionAnalysisService {
         return new EmotionAnalysisResultDto(emotionDtos, diaryRecord.getDiaryRecordId());
     }
 
-    /**
-     * 감정 분석 결과 추천 정보 저장 (기존과 동일)
-     * @param diaryId 일기 ID
-     * @param result 추천 결과 JsonNode
-     */
-    @Transactional(readOnly = false)
-    public void saveRecommendations(Long diaryId, JsonNode result) {
-        DiaryRecord diaryRecord = diaryRecordRepository.findById(diaryId)
-            .orElseThrow(() -> new EntityNotFoundException("DiaryRecord not found"));
-        
-        JsonNode recommendationsNode = result.path("recommendations");
 
-        // 1. matching_preferences 저장
-        JsonNode matching = recommendationsNode.path("matching_preferences");
-        if (matching.isArray()) {
-            for (JsonNode rec : matching) {
-                Recommendation recommendation = new Recommendation();
-                recommendation.setUser(diaryRecord.getUser());
-                recommendation.setDiaryRecord(diaryRecord);
-                recommendation.setTypePreference("matching_preferences");
-                recommendation.setType(rec.path("type").asText());
-                recommendation.setTitle(rec.path("title").asText());
-                recommendation.setReason(rec.path("reason").asText());
-                recommendation.setGenre(rec.path("genre").asText());
-                recommendation.setLink(typeClassificationService.typeClassification( //각 타입별로 (유튜브,네이버) 링크 삽입 로직 호출
-                    rec.path("type").asText(),
-                    rec.path("title").asText(),
-                    diaryRecord.getUser().getUserId()
-                ));
-                recommendationRepository.save(recommendation);
-            }
-        }
-        JsonNode nonMatching = recommendationsNode.path("non_matching_preferences");
-        if (nonMatching.isArray()) {
-            for (JsonNode rec : nonMatching) {
-                Recommendation recommendation = new Recommendation();
-                recommendation.setUser(diaryRecord.getUser());
-                recommendation.setDiaryRecord(diaryRecord);
-                recommendation.setTypePreference("non_matching_preferences");
-                recommendation.setType(rec.path("type").asText());
-                recommendation.setTitle(rec.path("title").asText());
-                recommendation.setReason(rec.path("reason").asText());
-                recommendation.setGenre(rec.path("genre").asText());
-                recommendation.setLink(typeClassificationService.typeClassification(  //각 타입별로 (유튜브,네이버) 링크 삽입 로직 호출
-                    rec.path("type").asText(),
-                    rec.path("title").asText(),
-                    diaryRecord.getUser().getUserId()
-                ));
-                recommendationRepository.save(recommendation);
-            }
-        }
-    }
-
-    /**
-     * 감정 분석 결과 추천정보 조회 (기존과 동일)
-     * @param diaryId 일기 ID
-     * @return 추천 정보 리스트
-     */
-    public List<UserRecommendationResponseDto> getRecommendations(Long diaryId) {
-        List<Recommendation> recommendations = recommendationRepository.findByDiaryRecord_DiaryRecordId(diaryId);
-        List<UserRecommendationResponseDto> userRecommendationResponseDtos = new ArrayList<>();
-        for (Recommendation rec : recommendations) {
-            System.out.println("[추천정보] type: " + rec.getType() + ", title: " + rec.getTitle() + ", reason: " + rec.getReason() + ", link: " + rec.getLink() + ", typePreference: " + rec.getTypePreference());
-            UserRecommendationResponseDto userRecommendationResponseDto = new UserRecommendationResponseDto();
-            userRecommendationResponseDto.setDiaryRecord(diaryId);
-            userRecommendationResponseDto.setTypePreference(rec.getTypePreference());
-            userRecommendationResponseDto.setType(rec.getType());
-            userRecommendationResponseDto.setTitle(rec.getTitle());
-            userRecommendationResponseDto.setReason(rec.getReason());
-            userRecommendationResponseDto.setLink(rec.getLink());
-            userRecommendationResponseDto.setGenre(rec.getGenre());
-            userRecommendationResponseDto.setRecommendationId(rec.getRecommendationId());
-            userRecommendationResponseDtos.add(userRecommendationResponseDto);
-        }
-        return userRecommendationResponseDtos;
-    }
 }
