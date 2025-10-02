@@ -33,16 +33,22 @@ public class YoutubeService {
             + "&q=" + query
             + "&part=snippet"
             + "&type=video"
-            + "&maxResults=1";
+            + "&maxResults=3";
 
         try {
             String response = restTemplate.getForObject(url, String.class);
             JsonNode json = objectMapper.readTree(response);
             JsonNode items = json.get("items");
-            if (items != null && items.size() > 0) {
-                JsonNode firstItem = items.get(0);
-                String videoId = firstItem.get("id").get("videoId").asText();
-                return "https://www.youtube.com/watch?v=" + videoId;
+            if (items != null && items.isArray() && items.size() > 0) {
+                for (JsonNode item : items) {
+                    JsonNode idNode = item.get("id");
+                    if (idNode != null && idNode.has("videoId")) {
+                        String videoId = idNode.get("videoId").asText();
+                        if (videoId != null && !videoId.isEmpty()) {
+                            return "https://www.youtube.com/watch?v=" + videoId;
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
             log.error("유튜브 API 파싱 오류", e);

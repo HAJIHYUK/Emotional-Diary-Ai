@@ -138,10 +138,13 @@ public class DiaryService {
         diaryRecordRepository.save(diaryRecord);
     }
 
-    //일기 삭제
+    //일기 소프트 삭제
     @Transactional(readOnly = false)
     public String deleteDiaryRecord(Long diaryId) {
-        diaryRecordRepository.deleteById(diaryId);
+        DiaryRecord diaryRecord = diaryRecordRepository.findById(diaryId)
+            .orElseThrow(() -> new EntityNotFoundException("DiaryRecord not found"));
+        diaryRecord.setDeleted(true);
+        diaryRecordRepository.save(diaryRecord);
         return "일기가 성공적으로 삭제되었습니다.";
     }
 

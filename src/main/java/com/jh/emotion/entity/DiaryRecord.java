@@ -66,7 +66,7 @@ public class DiaryRecord {//일기 정보 (사용자 일기)
     private boolean isDraft = false; // true면 임시저장, false면 최종저장
 
     @Column(name = "deleted", nullable = false)
-    private boolean deleted = false; // 삭제 여부
+    private boolean deleted = false; // 삭제 여부 true면 삭제, false면 삭제 안됨
 
     @Column(nullable = false)
     private int emotionAnalysisCount = 0; // 감정분석 시도 횟수

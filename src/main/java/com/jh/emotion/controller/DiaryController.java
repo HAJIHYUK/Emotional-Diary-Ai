@@ -18,7 +18,7 @@ import com.jh.emotion.dto.DiaryWriteDto;
 import com.jh.emotion.dto.SuccessResponse;
 import com.jh.emotion.dto.UserRecommendationResponseDto;
 import com.jh.emotion.entity.DiaryRecord;
-import com.jh.emotion.service.AiEmotionAnalysisService;
+import com.jh.emotion.service.RecommendationService; // RecommendationService import 추가
 import com.jh.emotion.service.DiaryService;
 import com.jh.emotion.service.RecommendationService;
 

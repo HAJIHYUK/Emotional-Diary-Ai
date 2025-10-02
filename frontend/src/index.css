@@ -161,3 +161,37 @@ body {
 .emotion-badge:hover {
   transform: scale(1.08);
 }
+
+/* --- Recommendation & Video Preview Styles --- */
+.recommendation-item {
+  padding-bottom: 1rem; 
+}
+
+.recommendation-link-area {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.recommendation-link-area:hover .recommendation-text strong {
+  color: var(--sidebar-header-color);
+}
+
+.video-preview-container {
+  position: relative;
+  overflow: hidden;
+      width: 33%; /* 너비를 33%로 조정합니다 */
+      padding-top: 18.5%; /* 33% 너비에 대한 16:9 비율 (사용자 요청) */
+}
+
+.video-preview-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+}

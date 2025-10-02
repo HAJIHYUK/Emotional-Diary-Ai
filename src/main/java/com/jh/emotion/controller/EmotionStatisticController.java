@@ -24,6 +24,14 @@ public class EmotionStatisticController {
     private final EmotionStatisticService emotionStatisticService;
 
     // 감정 통계 조회
+    /**
+     * 감정 통계 조회
+     * @param userId
+     * @param startDate
+     * @param endDate
+     * @param periodType 는 WEEK 또는 MONTH 중 하나
+     * @return
+     */
     @GetMapping("/statistic")
     public ResponseEntity<SuccessResponse<EmotionStatsResponseDto>> getEmotionStatistic(
             @RequestParam("userId") Long userId,

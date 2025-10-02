@@ -72,3 +72,20 @@ export const deleteDiary = (diaryId) => {
 export const analyzeDiaryEmotion = (diaryId) => {
   return api.post(`/api/emotion/analyze?userId=${MOCK_USER_ID}`, { diaryRecordId: diaryId });
 };
+
+/**
+ * 지정된 기간의 감정 통계를 조회합니다.
+ * @param {string} startDate 시작일 (YYYY-MM-DD)
+ * @param {string} endDate 종료일 (YYYY-MM-DD)
+ * @param {string} periodType 기간 타입 ('WEEK' 또는 'MONTH')
+ */
+export const getEmotionStats = (startDate, endDate, periodType) => {
+  return api.get(`/api/emotion/statistic`, {
+    params: {
+      userId: MOCK_USER_ID,
+      startDate,
+      endDate,
+      periodType,
+    },
+  });
+};

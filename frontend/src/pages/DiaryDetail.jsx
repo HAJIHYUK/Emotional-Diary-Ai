@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, Button, Spinner, Alert, Row, Col, ListGroup, Badge, Modal } from 'react-bootstrap';
 import { getDiaryDetail, getRecommendations, deleteDiary, analyzeDiaryEmotion } from '../api/diaryApi';
-import { FaRegCalendarAlt, FaCloudSun, FaHeart, FaMusic, FaFilm, FaBook, FaTrash, FaArrowLeft, FaMagic, FaBrain, FaPencilAlt, FaLightbulb } from 'react-icons/fa';
+import { FaRegCalendarAlt, FaCloudSun, FaHeart, FaMusic, FaFilm, FaBook, FaTrash, FaArrowLeft, FaMagic, FaBrain, FaPencilAlt, FaLightbulb, FaYoutube, FaInstagram, FaMapMarkedAlt, FaBloggerB, FaRegNewspaper, FaLink } from 'react-icons/fa';
 
 // --- Helper & Presentational Components ---
 
@@ -43,9 +43,16 @@ const EmotionDisplay = ({ emotions }) => {
   );
 };
 
-const RecommendationIcon = ({ type }) => {
-  const iconMap = { '음악': <FaMusic/>, '영화': <FaFilm/>, '도서': <FaBook/> };
-  return iconMap[type] || null;
+const RecommendationIcon = ({ linkType }) => {
+  const iconMap = {
+    YOUTUBE: <FaYoutube style={{ color: '#FF0000' }} />,
+    INSTAGRAM: <FaInstagram style={{ color: '#E4405F' }} />,
+    NAVER_PLACE: <FaMapMarkedAlt style={{ color: '#03C75A' }} />,
+    NAVER_BLOG: <FaBloggerB style={{ color: '#03C75A' }} />,
+    ARTICLE: <FaRegNewspaper style={{ color: '#6c757d' }} />,
+    GENERIC: <FaLink style={{ color: '#6c757d' }} />,
+  };
+  return iconMap[linkType] || <FaLink style={{ color: '#6c757d' }} />;
 };
 
 const PageHeader = ({ onAnalyze, isAnalyzing, emotionAnalysisCount, onDeleteClick, onEditClick }) => (
@@ -107,27 +114,64 @@ const AnalysisCard = ({ isAnalyzing, diary }) => (
   </Card>
 );
 
-const RecommendationsCard = ({ recommendations }) => (
-  <Card style={{ minHeight: '200px' }}>
-    <Card.Header className="fw-bold">AI 추천 콘텐츠</Card.Header>
-    <ListGroup variant="flush">
-      {recommendations.length > 0 ? recommendations.map(rec => (
-        <ListGroup.Item key={rec.recommendationId} action href={rec.link} target="_blank" className="d-flex align-items-center gap-3">
-          <span style={{color: 'var(--primary-color)', fontSize: '1.2rem'}}><RecommendationIcon type={rec.type}/></span>
-          <div>
-            <strong className="d-block">{rec.title}</strong>
-            <small className="text-muted">{rec.reason}</small>
-          </div>
-        </ListGroup.Item>
-      )) : (
-        <ListGroup.Item className="text-muted p-4 text-center d-flex flex-column justify-content-center align-items-center" style={{minHeight: '100px'}}>
-          <FaLightbulb size={25} className="mb-2" style={{color: 'var(--border-color)'}}/>
-          <span>감정 분석을 완료하면 맞춤 콘텐츠를 추천해드려요.</span>
-        </ListGroup.Item>
-      )}
-    </ListGroup>
-  </Card>
-);
+const RecommendationsCard = ({ recommendations }) => {
+      const getYouTubeVideoId = (url) => {
+        if (!url) return null;
+        try {
+          const urlObj = new URL(url);
+          // Handles short URLs like youtu.be/VIDEO_ID
+          if (urlObj.hostname === 'youtu.be') {
+            return urlObj.pathname.slice(1);
+          }
+          // Handles long URLs like youtube.com/watch?v=VIDEO_ID
+          if (urlObj.hostname.includes('youtube.com')) {
+            return urlObj.searchParams.get('v');
+          }
+          return null;
+        } catch (error) {
+          console.error("Invalid URL for YouTube parsing:", error);
+          return null;
+        }
+      };
+
+      return (
+        <Card style={{ minHeight: '200px' }}>
+          <Card.Header className="fw-bold">AI 추천 콘텐츠</Card.Header>
+          <ListGroup variant="flush">
+            {recommendations.length > 0 ? recommendations.map(rec => {
+              const videoId = getYouTubeVideoId(rec.link);
+              return (
+                <ListGroup.Item key={rec.recommendationId} className="recommendation-item">
+                  <a href={rec.link} target="_blank" rel="noopener noreferrer" className="recommendation-link-area">
+                    <span style={{ fontSize: '1.5rem' }}><RecommendationIcon linkType={rec.linkType} /></span>
+                    <div className="recommendation-text">
+                      <strong className="d-block">{rec.title}</strong>
+                      <small className="text-muted">{rec.reason}</small>
+                    </div>
+                  </a>
+                  {rec.linkType === 'YOUTUBE' && videoId && (
+                    <div className="video-preview-container mt-3">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${videoId}`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title={rec.title}
+                      ></iframe>
+                    </div>
+                  )}
+                </ListGroup.Item>
+              );
+            }) : (
+              <ListGroup.Item className="text-muted p-4 text-center d-flex flex-column justify-content-center align-items-center" style={{ minHeight: '100px' }}>
+                <FaLightbulb size={25} className="mb-2" style={{ color: 'var(--border-color)' }} />
+                <span>감정 분석을 완료하면 맞춤 콘텐츠를 추천해드려요.</span>
+              </ListGroup.Item>
+            )}
+          </ListGroup>
+        </Card>
+      );
+    };
 
 const DeleteConfirmationModal = ({ show, onHide, onConfirm }) => (
   <Modal show={show} onHide={onHide} centered>

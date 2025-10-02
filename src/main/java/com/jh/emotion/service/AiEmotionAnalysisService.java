@@ -1,7 +1,9 @@
 package com.jh.emotion.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -23,10 +25,12 @@ import com.jh.emotion.dto.EmotionAnalysisResultDto;
 import com.jh.emotion.dto.EmotionDto;
 import com.jh.emotion.entity.DiaryRecord;
 import com.jh.emotion.entity.Emotion;
+import com.jh.emotion.entity.EmotionDailyStat;
 import com.jh.emotion.entity.User;
 import com.jh.emotion.entity.UserPreference;
 import com.jh.emotion.enums.PreferenceType;
 import com.jh.emotion.repository.DiaryRecordRepository;
+import com.jh.emotion.repository.EmotionDailyStatRepository;
 import com.jh.emotion.repository.UserPreferenceRepository;
 import com.jh.emotion.repository.UserRepository;
 
@@ -44,7 +48,8 @@ public class AiEmotionAnalysisService {
     private final UserPreferenceRepository userPreferenceRepository;
     private final UserRepository userRepository;
     private final CachingService cachingService;
-    private final RecommendationService recommendationService; // RecommendationService 주입
+    private final RecommendationService recommendationService; 
+    private final EmotionDailyStatRepository emotionDailyStatRepository;
     
 
     private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent";
@@ -171,8 +176,6 @@ public class AiEmotionAnalysisService {
         JsonNode jsonResponse = objectMapper.readTree(response.getBody());
         String content_text = jsonResponse.path("candidates").path(0).path("content").path("parts").path(0).path("text").asText();
         
-        // --- ↓ [디버깅 로그 추가] Gemini API의 실제 응답 내용을 확인하기 위한 로그 ---
-        log.info("Gemini API Raw Response: {}", content_text); 
         
         String cleanedContent = content_text
                 .replaceAll("```json\\s*", "")
@@ -236,15 +239,20 @@ public class AiEmotionAnalysisService {
         ArrayNode partsArray = content.putArray("parts");
         ObjectNode textPart = partsArray.addObject();
         
-        String emotionString = emotions.stream()
-            .map(e -> e.getLabel() + "(level:" + e.getLevel() + ")")
-            .reduce((a, b) -> a + ", " + b)
-            .orElse("N/A");
+        StringBuilder emotionStringBuilder = new StringBuilder();
+        for (int i = 0; i < emotions.size(); i++) {
+            EmotionDto e = emotions.get(i);
+            emotionStringBuilder.append(e.getLabel()).append("(level:").append(e.getLevel()).append(")");
+            if (i < emotions.size() - 1) {
+                emotionStringBuilder.append(", ");
+            }
+        }
+        String emotionString = emotionStringBuilder.length() > 0 ? emotionStringBuilder.toString() : "N/A";
 
         textPart.put("text",
             "분석된 감정을 기반으로, 유저 위치와 유저 취향 정보를 참고해서 " +
             "취향에 맞는 3~6개, 취향 외의 것 2~4개를 추천해줘." +
-            "추천 정보는 최근 20개 추천 정보 제외 추천 정보를 추천해줘." +
+            "추천 정보는 꼭!! 최근 20개 추천 정보 제외 추천 정보를 추천해줘." +
             "최근20개:"+ excludeRecommendationTitle + // 최근 20개 추천 정보 제외
             "아래와 같이 카테고리별로 추천 기준을 반드시 지켜줘:\n" +
             "type(대분류)기준 ex: MOVIE, MUSIC, CAFE, RESTAURANT, FOOD, YOUTUBE, ENTERTAINMENT, PLACE, WALKING_TRAIL, ACTIVITY, non_matching_preferences\n" +
@@ -297,7 +305,10 @@ public class AiEmotionAnalysisService {
         // 감정 리스트 파싱 및 저장
         List<EmotionDto> emotionDtos = new ArrayList<>();
         List<Emotion> emotions = new ArrayList<>();
-        JsonNode emotionsNode = result.path("emotions");
+
+        // 중립 감정 비율을 조정하는 로직 추가
+        JsonNode emotionsNode = adjustNeutralEmotionRatio(result.path("emotions"));
+        
         if (emotionsNode.isArray()) {
             for (JsonNode emotionNode : emotionsNode) {
                 Emotion emotion = new Emotion();
@@ -336,6 +347,7 @@ public class AiEmotionAnalysisService {
             diaryRecord.setContentHash(contentHash);
         }
         diaryRecordRepository.save(diaryRecord);
+        updateDailyStats(diaryRecord, emotions);
         return new EmotionAnalysisResultDto(emotionDtos, diaryRecord.getDiaryRecordId());
     }
 
@@ -362,4 +374,141 @@ public class AiEmotionAnalysisService {
     }
 
 
+
+    /**
+   * 감정 분석 결과를 바탕으로 일별 통계 테이블(EmotionDailyStat)을 업데이트함
+   * @param diaryRecord 통계의 기준이 될 일기 엔티티 (entryDate, user 정보를 얻기 위함)
+   * @param emotions 분석된 감정 엔티티 목록
+   */
+  @Transactional
+  private void updateDailyStats(DiaryRecord diaryRecord, List<Emotion> emotions) {
+      Map<String, int[]> updates = new HashMap<>();
+
+      // 분석된 감정들을 Map으로 집계합니다.
+      for (Emotion emotion : emotions) {
+          String label = emotion.getLabel();
+
+          // Map에 해당 감정 라벨(Key)이 있는지 확인합니다.
+          if (!updates.containsKey(label)) {
+              // 없으면, [횟수, 레벨 총합]을 담을 새로운 정수 배열을 만들어 Map에 넣습니다.
+              updates.put(label, new int[]{0, 0});
+          }
+
+          // 이제 Map에 해당 라벨이 확실히 존재하므로, 값을 가져와서 업데이트합니다.
+          int[] values = updates.get(label);
+          values[0]++; // 횟수 1 증가
+          values[1] += emotion.getLevel(); // 레벨 합산
+      }
+
+      // 2. 집계된 Map을 기반으로 DB에 업데이트하는 로직 (이 부분은 동일합니다)
+      for (String label : updates.keySet()) {
+        // 현재 키(label)에 해당하는 값([횟수, 레벨총합] 배열)을 가져옵니다.
+        int[] values = updates.get(label);
+        int countToAdd = values[0];
+        int levelSumToAdd = values[1];
+  
+        // 기존 통계 데이터가 있는지 찾습니다.
+        Optional<EmotionDailyStat> existingStatOpt = emotionDailyStatRepository
+            .findByUser_UserIdAndDateAndEmotionLabel(diaryRecord.getUser().getUserId(), diaryRecord.getEntryDate(), label);
+  
+        EmotionDailyStat stat;
+        if (existingStatOpt.isPresent()) {
+            // 데이터가 있으면, 그 데이터를 가져옵니다.
+            stat = existingStatOpt.get();
+        } else {
+            // 데이터가 없으면, 새로운 EmotionDailyStat 객체를 생성합니다.
+            stat = new EmotionDailyStat();
+            stat.setUser(diaryRecord.getUser());
+            stat.setDate(diaryRecord.getEntryDate());
+            stat.setEmotionLabel(label);
+        }
+  
+        // 4. 횟수와 레벨 총합을 더해준 뒤 저장합니다.
+        stat.setEmotionCount(stat.getEmotionCount() + countToAdd);
+        stat.setLevelSum(stat.getLevelSum() + levelSumToAdd);
+        emotionDailyStatRepository.save(stat);
+    }
+  }
+
+    /**
+     * AI가 분석한 감정 결과에서 '중립' 감정의 비율을 조정함
+     * 중립 비율이 20%를 초과하면 20%로 낮추고, 초과분을 다른 감정들에 비례하여 분배합니다.
+     * @param emotionsNode 감정 분석 결과가 담긴 JsonNode (배열 형태)
+     * @return 조정된 감정 비율이 포함된 새로운 JsonNode
+     */
+    private JsonNode adjustNeutralEmotionRatio(JsonNode emotionsNode) {
+        if (!emotionsNode.isArray() || emotionsNode.isEmpty()) {
+            return emotionsNode;
+        }
+
+        List<ObjectNode> emotions = new ArrayList<>();
+        for (JsonNode node : emotionsNode) {
+            if (node.isObject()) {
+                emotions.add((ObjectNode) node.deepCopy());
+            }
+        }
+        
+        log.info("중립 감정 비율 조정을 시작합니다. 원본 데이터: {}", emotionsNode.toString());
+
+        ObjectNode neutralEmotion = null;
+        for (ObjectNode e : emotions) {
+            if ("중립".equalsIgnoreCase(e.path("label").asText("").trim())) {
+                neutralEmotion = e;
+                break;
+            }
+        }
+
+        if (neutralEmotion == null) {
+            log.warn("조정할 '중립' 감정을 찾지 못했습니다.");
+            return emotionsNode;
+        }
+
+        double neutralRatio = neutralEmotion.path("ratio").asDouble(0.0);
+
+        // 비율 값이 0.0 ~ 1.0 사이의 소수이므로, 20%는 0.2와 비교해야함
+        if (neutralRatio <= 0.20) {
+            log.info("'중립' 감정 비율({}%)이 20% 이하이므로 조정을 건너뜁니다.", neutralRatio * 100);
+            return emotionsNode;
+        }
+        
+        log.info("중립 감정 비율 조정 시작. Original ratio: {}%", neutralRatio * 100);
+
+        double excessRatio = neutralRatio - 0.20;
+        neutralEmotion.put("ratio", 0.20);
+
+        List<ObjectNode> otherEmotions = new ArrayList<>();
+        double otherEmotionsTotalRatio = 0.0;
+        for (ObjectNode e : emotions) {
+            if (!"중립".equalsIgnoreCase(e.path("label").asText("").trim())) {
+                otherEmotions.add(e);
+                otherEmotionsTotalRatio += e.path("ratio").asDouble(0.0);
+            }
+        }
+
+        if (otherEmotionsTotalRatio > 0 && !otherEmotions.isEmpty()) {
+            for (ObjectNode emotion : otherEmotions) {
+                double originalRatio = emotion.path("ratio").asDouble(0.0);
+                double proportion = originalRatio / otherEmotionsTotalRatio;
+                double newRatio = originalRatio + (excessRatio * proportion);
+                // 소수점 둘째 자리까지 반올림
+                emotion.put("ratio", Math.round(newRatio * 100.0) / 100.0);
+            }
+            log.info("초과된 중립 감정 비율을 다른 감정에 분배했습니다.");
+        } else {
+            log.warn("중립 감정 외 다른 감정이 없거나 비율이 0이므로 초과분을 분배할 수 없습니다. 총 비율의 합이 100이 아닐 수 있습니다.");
+        }
+
+        double totalAdjustedRatio = 0.0;
+        for (ObjectNode e : emotions) {
+            totalAdjustedRatio += e.path("ratio").asDouble(0.0);
+        }
+        log.info("조정 후 전체 감정 비율 합계: {}", totalAdjustedRatio);
+
+        ArrayNode adjustedEmotionsArray = objectMapper.createArrayNode();
+        adjustedEmotionsArray.addAll(emotions);
+
+        log.info("중립 감정 비율 조정 완료. 최종 데이터: {}", adjustedEmotionsArray.toString());
+
+        return adjustedEmotionsArray;
+    }
 }

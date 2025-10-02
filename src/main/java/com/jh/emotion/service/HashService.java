@@ -48,18 +48,24 @@ public class HashService {
 
     // 일기 내용 정규화: 줄바꿈 통일, 유니코드 정규화, 공백 압축, 소문자 통일
     private static String normalizeContent(String s) {
-        //줄바꿈 통일 (모든 \r\n, \r → \n)
-        s = s.replace("\r\n", "\n").replace("\r", "\n");
-        //유니코드 정규화(시각적으로 같은 문자를 같은 바이트로)
+        // 0) null 안전 처리
+        s = s == null ? "" : s;
+
+        // 1) 유니코드 정규화 (시각적으로 같은 문자를 같은 바이트로)
         s = Normalizer.normalize(s, Normalizer.Form.NFKC);
-        //특수문자 제거 (한글, 영어, 숫자, 공백만 남김)
-        s = s.replaceAll("[^\\p{IsHangul}\\p{IsAlphabetic}\\p{IsDigit}\\s]", "");
-        //공백 압축 (연속된 공백/탭/줄바꿈을 하나의 공백으로)
-        s = s.replaceAll("[ \\t\\x0B\\f\\n\\r]+", " ");
-        //앞뒤 공백 제거
-        s = s.trim();
-        //소문자 통일
+
+        // 2) 소문자 통일
         s = s.toLowerCase(Locale.ROOT);
+
+        // 3) 의미 없는 단독 자음/모음 제거 (ex: ㅋㅋ, ㅎㅎ, ㅠㅠ)
+        s = s.replaceAll("[ㄱ-ㅎㅏ-ㅣ]+", "");
+
+        // 4) 특수문자 및 기호 제거 (한글, 영어, 숫자, 공백만 남김)
+        s = s.replaceAll("[^\\p{IsHangul}\\p{IsAlphabetic}\\p{IsDigit}\\s]", "");
+
+        // 5) 공백 압축 (연속된 공백/탭/줄바꿈을 하나의 공백으로)
+        s = s.replaceAll("\\s+", " ").trim();
+
         return s;
     }
 

@@ -4,8 +4,12 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.jh.emotion.enums.LinkType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -49,6 +53,9 @@ public class Recommendation {//추천 정보
     private String reason;// 추천 이유
 
     private String link;// 추천 링크
+
+    @Enumerated(EnumType.STRING)
+    private LinkType linkType; // 추천 링크 타입 (YOUTUBE, NAVER, CAFE)
     
     @CreationTimestamp
     private LocalDateTime createdAt;

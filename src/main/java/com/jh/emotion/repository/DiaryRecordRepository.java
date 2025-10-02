@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.jh.emotion.entity.DiaryRecord;
-import com.jh.emotion.entity.User;
 
 @Repository
 public interface DiaryRecordRepository extends JpaRepository<DiaryRecord, Long> {
