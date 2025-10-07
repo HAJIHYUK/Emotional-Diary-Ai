@@ -100,6 +100,7 @@ dependencies {
     // JSR 310 호환성 지원 , LocalDate 타입 직렬화 지원 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     
+    implementation 'org.jsoup:jsoup:1.17.2' // Jsoup 라이브러리 추가
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
 
