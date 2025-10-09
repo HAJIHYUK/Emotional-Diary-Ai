@@ -38,6 +38,12 @@ public class UserPreferenceController {
         return ResponseEntity.ok(new SuccessResponse<>(0, "유저 선호도 조회 완료", preferences));
     }
 
+    @PostMapping("/delete")
+    public ResponseEntity<SuccessResponse<Void>> deactivateUserPreference(@RequestParam("userId") Long userId, @RequestBody List<Long> userPreferenceIds) {
+        userPreferenceService.deactivateUserPreference(userId, userPreferenceIds);
+        return ResponseEntity.ok(new SuccessResponse<>(0, "유저 선호도 비활성화 완료", null));
+    }
+
     //addUserPreferenceByClickEvent 테스트 
     @PostMapping("/preferenceTest")
     public ResponseEntity<SuccessResponse<Void>> savePreferenceTest(){

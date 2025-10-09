@@ -58,6 +58,9 @@ public class UserPreference { // 유저 선호도 정보
     
     @UpdateTimestamp
     private LocalDateTime lastUsedAt;
+
+    @Column(nullable = false)
+    private boolean isActive = true;
 }
 
 

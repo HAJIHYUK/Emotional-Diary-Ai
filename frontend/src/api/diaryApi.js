@@ -89,3 +89,26 @@ export const getEmotionStats = (startDate, endDate, periodType) => {
     },
   });
 };
+
+/**
+ * 현재 사용자의 취향 목록을 조회합니다.
+ */
+export const getUserPreferences = () => {
+  return api.get(`/api/user-preference/list?userId=${MOCK_USER_ID}`);
+};
+
+/**
+ * 사용자의 취향 목록을 업데이트(전체 교체)합니다.
+ * @param {Array<{preferenceType: string, preferenceCategory: string}>} preferences - 선택된 취향 객체의 배열
+ */
+export const updateUserPreferences = (preferences) => {
+  return api.post(`/api/user-preference/save?userId=${MOCK_USER_ID}`, preferences);
+};
+
+/**
+ * 사용자의 취향 목록을 ID를 기준으로 삭제합니다.
+ * @param {number[]} preferenceIds - 삭제할 취향 ID의 배열
+ */
+export const deleteUserPreferences = (preferenceIds) => {
+  return api.post(`/api/user-preference/delete?userId=${MOCK_USER_ID}`, preferenceIds);
+};

@@ -3,6 +3,7 @@ package com.jh.emotion.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,19 +40,30 @@ public class UserPreferenceService {
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         // 유저 선호도 정보 저장 
-        for (UserPreferenceInitialRequestDto preference : userPreferenceInitialDto) {
-            for (String genre : preference.getGenres()) {
-                // 중복 체크
-                if (userPreferenceRepository.existsByUser_UserIdAndCategoryAndGenre(userId, preference.getCategory(), genre)) {
-                    continue; // 이미 있으면 저장하지 않음
+        for (UserPreferenceInitialRequestDto preferenceDto : userPreferenceInitialDto) {
+            for (String genre : preferenceDto.getGenres()) {
+                // 이미 활성화된 동일 취향이 있는지 확인
+                if (userPreferenceRepository.existsByUser_UserIdAndCategoryAndGenreAndIsActiveTrue(userId, preferenceDto.getCategory(), genre)) {
+                    continue; // 이미 활성화 상태이면 건너뜀
                 }
-                UserPreference userPreference = new UserPreference();
-                userPreference.setUser(user);
-                userPreference.setCategory(preference.getCategory());
-                userPreference.setGenre(genre);
-                userPreference.setType(PreferenceType.INITIAL);
-                userPreference.setUseCount(0);
-                userPreferenceRepository.save(userPreference);
+
+                // 비활성화된 동일 취향이 있는지 확인
+                Optional<UserPreference> inactivePreference = userPreferenceRepository.findByUser_UserIdAndCategoryAndGenreAndIsActiveFalse(userId, preferenceDto.getCategory(), genre);
+
+                if (inactivePreference.isPresent()) {
+                    // 있으면 재활성화
+                    UserPreference userPreference = inactivePreference.get();
+                    userPreference.setActive(true);
+                } else {
+                    // 없으면 새로 생성
+                    UserPreference newUserPreference = new UserPreference();
+                    newUserPreference.setUser(user);
+                    newUserPreference.setCategory(preferenceDto.getCategory());
+                    newUserPreference.setGenre(genre);
+                    newUserPreference.setType(PreferenceType.INITIAL);
+                    newUserPreference.setUseCount(0);
+                    userPreferenceRepository.save(newUserPreference);
+                }
             }
         }
     }
@@ -63,7 +75,7 @@ public class UserPreferenceService {
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         //유저 선호도 조회 
-        List<UserPreference> userPreferences = userPreferenceRepository.findByUser_UserId(userId);
+        List<UserPreference> userPreferences = userPreferenceRepository.findByUser_UserIdAndIsActiveTrue(userId);
 
         List<UserPreferenceResponseDto> userPreferenceDtos = new ArrayList<>();
 
@@ -74,26 +86,30 @@ public class UserPreferenceService {
             userPreferenceDto.setGenre(userPreference.getGenre());
             userPreferenceDto.setType(userPreference.getType().toString());
             userPreferenceDto.setUseCount(userPreference.getUseCount());
+            userPreferenceDto.setActive(userPreference.isActive());
             userPreferenceDtos.add(userPreferenceDto);
         }
 
         return userPreferenceDtos;
     }
 
-    //유저 선호도 삭제 (현재 클릭 이벤트 연관된건 삭제가 안됨 추후 필요시 클릭이벤트에 boolean 넣어서 비활성화, 외래키 제약걸기는 힘들어서 genre를 기준으로 비활성화)
+    //유저 선호도 비활성화 (Hard Delete -> Soft Delete)
     @Transactional(readOnly = false)
-    public void deleteUserPreference(Long userId, List<Long> userPreferenceId) {
+    public void deactivateUserPreference(Long userId, List<Long> userPreferenceIds) {
         //유저 아이디 조회
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
         
-        for(Long upid : userPreferenceId) {
-            UserPreference userPreference = userPreferenceRepository.findById(upid)
-                .orElseThrow(() -> new EntityNotFoundException("User preference not found"));
-            userPreferenceRepository.delete(userPreference);
+        for(Long upid : userPreferenceIds) {
+            Optional<UserPreference> optionalPreference = userPreferenceRepository.findById(upid);
+            if (optionalPreference.isPresent()) {
+                UserPreference userPreference = optionalPreference.get();
+                // 자기 자신의 취향이 맞는지 한번 더 확인
+                if (userPreference.getUser().getUserId().equals(userId)) {
+                    userPreference.setActive(false);
+                }
+            }
         }
-        
-            
     }
 
 
@@ -129,7 +145,7 @@ public class UserPreferenceService {
                 category = PreferenceCategory.ETC;
             }
 
-            if(userPreferenceRepository.existsByUser_UserIdAndCategoryAndGenre(userId, category, genre)) {  //중복체크
+            if(userPreferenceRepository.existsByUser_UserIdAndCategoryAndGenreAndIsActiveTrue(userId, category, genre)) {  //중복체크
                 continue; //유저 선호도 중복저장 제한 
             }
 

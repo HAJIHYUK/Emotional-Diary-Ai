@@ -199,7 +199,7 @@ public class AiEmotionAnalysisService {
 
         // 유저 선호도 조회
         String userPreference = "";
-        List<UserPreference> userPreferences = userPreferenceRepository.findByUser_UserId(userId);
+        List<UserPreference> userPreferences = userPreferenceRepository.findByUser_UserIdAndIsActiveTrue(userId);
         for (UserPreference pf : userPreferences) {
             if (pf.getType() == PreferenceType.INITIAL) {
                 userPreference += pf.getCategory().toString() + ":" + pf.getGenre() + ", ";

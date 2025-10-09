@@ -6,6 +6,8 @@ import DiaryDetail from './pages/DiaryDetail';
 import EmotionStats from './pages/EmotionStats';
 import Recommendations from './pages/Recommendations';
 import Settings from './pages/Settings';
+import UserPreferences from './pages/UserPreferences';
+import UserOnboarding from './pages/UserOnboarding';
 import './index.css'; // 완전히 새로워진 파스텔톤 CSS 임포트
 
 function App() {
@@ -22,6 +24,8 @@ function App() {
             <Route path="/stats" element={<EmotionStats />} />
             <Route path="/recommendations" element={<Recommendations />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/settings/preferences" element={<UserPreferences />} />
+            <Route path="/onboarding" element={<UserOnboarding />} />
           </Routes>
         </main>
       </div>

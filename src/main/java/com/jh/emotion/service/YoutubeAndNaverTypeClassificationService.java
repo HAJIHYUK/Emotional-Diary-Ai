@@ -95,7 +95,8 @@ public class YoutubeAndNaverTypeClassificationService {
 
         } else if ("GOOGLE".equals(platform)) {
             log.warn("정의되지 않은 플랫폼 '{}'으로 Google 첫 번째 검색 결과를 가져옵니다. Query: {}", type, title);
-            finalLink = googleSearchService.getFirstSearchResultLink(title); // (수정) URL 생성 대신 서비스 호출
+        finalLink = googleSearchService.getFirstSearchResultLink(title); // (수정) Google API 호출 서비스 사용
+            log.info("[Fallback] Google 검색 결과: {}", finalLink != null ? finalLink : "결과 없음"); // (추가) Google 서비스로부터 받은 최종 링크를 기록합니다.
         }
         
         return new LinkInfo(finalLink, determineLinkType(finalLink));

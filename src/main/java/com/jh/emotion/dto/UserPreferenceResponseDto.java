@@ -8,12 +8,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class UserPreferenceResponseDto {
-
     private Long userPreferenceId;
     private String category;
     private String genre;
     private String type;
     private Integer useCount;
-
-
+    private boolean isActive;
 }
