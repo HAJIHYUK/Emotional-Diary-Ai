@@ -1,6 +1,5 @@
 package com.jh.emotion.service;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -17,15 +16,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class YoutubeService {
 
-    @Value("${youtube.api.key}")
-    private String apiKey;
-
+    private final ApiKeyManagerService apiKeyManager;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     
 
     //유튜브 실제 검색 후 링크반환 
     public String getTopYoutubeLink(String title, String reviewType) {
+        String apiKey = apiKeyManager.getApiKey("YOUTUBE");
         String query = title + " " + reviewType;
         log.info("query: {}", query);
         String url = "https://www.googleapis.com/youtube/v3/search"
@@ -56,6 +54,5 @@ public class YoutubeService {
         return null;
     }
 
-    // 검색 타입 분류 로직 메서드 삭제 (이전 위치)
 
 }

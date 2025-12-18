@@ -1,0 +1,238 @@
+/* UserOnboarding.module.css */
+
+.pageContainer {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.header h1 {
+  font-weight: 700;
+  color: #212529;
+}
+
+.header p {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin-bottom: 2.5rem;
+}
+
+.mainContent {
+  display: flex;
+  gap: 2rem;
+  min-height: 60vh;
+}
+
+/* Left column - Category list */
+.categoryNav {
+  flex: 0 0 240px;
+  border-right: 1px solid #e9ecef;
+  padding-right: 2rem;
+  max-height: 60vh; /* 최대 높이 제한 */
+  overflow-y: auto; /* 내용이 길어지면 스크롤 생성 */
+}
+
+.categoryList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  position: sticky;
+  top: 2rem;
+}
+
+.categoryItem {
+  display: flex;
+  align-items: center;
+  padding: 0.9rem 1.2rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  border-radius: 10px;
+  font-weight: 500;
+  color: #495057;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.categoryItem svg {
+  margin-right: 14px;
+  font-size: 1.3rem;
+  color: #868e96;
+  transition: color 0.2s ease;
+}
+
+.categoryItem:hover {
+  background-color: #f8f9fa;
+}
+
+.categoryItem.active {
+  background-color: #e7f5ff;
+  color: #1c7ed6;
+  font-weight: 700;
+}
+
+.categoryItem.active svg {
+  color: #1c7ed6;
+}
+
+/* Right column - Genre selection area */
+.genreSelection {
+  flex: 1;
+  padding-left: 1rem;
+}
+
+.genreHeader {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.genreHeader h3 {
+  font-weight: 700;
+  color: #343a40;
+  display: flex;
+  align-items: center;
+}
+
+.genreHeader h3 svg {
+  margin-right: 10px;
+  color: #1c7ed6;
+}
+
+.genreGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.genreButton {
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  padding: 0.6rem 1.2rem;
+  border-radius: 25px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.genreButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #adb5bd;
+}
+
+.genreButton.active {
+  background: linear-gradient(45deg, #228be6, #1c7ed6);
+  border-color: #1c7ed6;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(34, 139, 230, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Submit button area */
+.submitContainer {
+  text-align: center;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.submitButton {
+  padding: 0.8rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 30px;
+  background: linear-gradient(45deg, #40c057, #37b24d);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.submitButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(64, 192, 87, 0.3);
+}
+
+/* [추가] 내가 선택한 취향 요약 */
+.summaryContainer {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid #f1f3f5;
+}
+
+.summaryTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 1.5rem;
+}
+
+.summaryCategoryGroup {
+  margin-bottom: 1.5rem;
+}
+
+.summaryCategoryTitle {
+  font-weight: 600;
+  color: #343a40;
+  margin-bottom: 0.8rem;
+  font-size: 1rem;
+}
+
+.summaryTagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.summaryTag {
+  display: inline-flex;
+  align-items: center;
+  background-color: #e7f5ff;
+  color: #1864ab;
+  padding: 0.5rem 0.9rem;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.removeTagBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 8px;
+  background-color: #abd5f2;
+  border: none;
+  border-radius: 50%;
+  color: #1864ab;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.removeTagBtn:hover {
+  background-color: #89c2f0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+

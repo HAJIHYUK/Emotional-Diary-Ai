@@ -13,7 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LinkInfo {
 
-    private String link;
-    private LinkType linkType;
+    private String link; // 실제 링크 
+    private LinkType linkType; // Ui에게 보여줄 링크 타입
 
 }

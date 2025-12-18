@@ -11,8 +11,10 @@ import java.nio.charset.StandardCharsets;
 @Service
 public class GoogleSearchService {
 
+    // 구글 API 방식은 생각보다 결과가 너무 많이 안나옴 ㅠㅠ..
+
     /*
-    // (주석 처리) API 방식에 사용되던 필드들을 모두 주석 처리합니다.
+    // 구글 API 방식에 사용되던 필드들을 모두
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
@@ -30,11 +32,11 @@ public class GoogleSearchService {
     }
     */
 
-    // (수정) 생성자에서 더 이상 외부 의존성을 필요로 하지 않으므로, 매개변수 없는 기본 생성자를 사용합니다.
+    //생성자에서 더 이상 외부 의존성을 필요로 하지 않으므로, 매개변수 없는 기본 생성자를 사용합니다.
     public GoogleSearchService() {}
 
     /**
-     * (수정) 메소드의 역할을 Google 검색 '페이지 URL'을 반환하는 것으로 변경합니다.
+     * 메소드의 역할을 Google 검색 '페이지 URL'을 반환하는 것으로 변경합니다.
      * 내부적으로는 새로 추가된 createGoogleSearchUrl 헬퍼 메소드를 호출합니다.
      * @param query 검색할 문자열
      * @return 생성된 Google 검색 페이지 URL
@@ -51,7 +53,7 @@ public class GoogleSearchService {
     }
 
     /**
-     * (추가) Google 검색 URL을 생성하는 헬퍼 메소드입니다.
+     *  Google 검색 URL을 생성하는 헬퍼 메소드
      * @param query 검색할 문자열
      * @return 생성된 Google 검색 URL, 인코딩 실패나 입력값 오류 시 null
      */

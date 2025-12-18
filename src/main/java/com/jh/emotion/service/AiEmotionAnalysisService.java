@@ -13,7 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -52,12 +52,15 @@ public class AiEmotionAnalysisService {
     private final EmotionDailyStatRepository emotionDailyStatRepository;
     
 
-    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent";
+    // 추천 생성용 모델 URL (2.5 Flash로 수정)
+    private static final String GEMINI_FLASH_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent";
+    // 감정 분석용 모델 URL (2.5 Flash-Lite로 수정)
+    private static final String GEMINI_FLASH_LITE_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent";
     
     @Value("${gemini.api.key}")
     private String apiKey;
     
-    private final RestTemplate restTemplate;
+    private final WebClient webClient; // [수정]
     private final ObjectMapper objectMapper;
 
     /**
@@ -71,6 +74,17 @@ public class AiEmotionAnalysisService {
     public EmotionAnalysisResultDto analyzeEmotionAndRecommend(Long userId, Long diaryId) throws JsonProcessingException {
         // 1. 감정 분석
         EmotionAnalysisResultDto emotionAnalysisResult = analyzeAndSaveEmotions(userId, diaryId);
+
+        // // --- [추가] API 연속 호출 방지를 위한 지연 시간 ---
+        // try {
+        //     // 5초간 대기
+        //     log.info("Gemini API 연속 호출 방지를 위해 5초간 대기합니다...");
+        //     Thread.sleep(5000); 
+        // } catch (InterruptedException e) {
+        //     Thread.currentThread().interrupt();
+        //     log.error("API 호출 지연 중 스레드 인터럽트 발생", e);
+        // }
+        // // --- [추가 끝] ---
 
         // 2. 추천 생성 및 저장
         generateAndSaveRecommendations(userId, diaryId, emotionAnalysisResult.getEmotions());
@@ -90,21 +104,26 @@ public class AiEmotionAnalysisService {
      */
     @Transactional
     public EmotionAnalysisResultDto analyzeAndSaveEmotions(Long userId, Long diaryId) throws JsonProcessingException {
+        log.info("==================== AI 분석 시작 (Diary ID: {}) ====================", diaryId);
         DiaryRecord diaryRecord = diaryRecordRepository.findById(diaryId)
             .orElseThrow(() -> new EntityNotFoundException("DiaryRecord not found"));
         String text = diaryRecord.getContent();
 
 
         // 1. L1(Redis) 캐시 조회
+        log.info("[AI 분석 STEP 1/3] L1 캐시(Redis) 조회를 시작합니다.");
         String cachedResult = cachingService.getCachedResult(text);
         if (cachedResult != null) {
             JsonNode emotionResultNode = objectMapper.readTree(cachedResult);
             String hash = HashService.generateContentHash(text);
-            log.info("L1 캐시 조회 결과: {}", cachedResult);
+            log.info("[AI 분석 STEP 1/3] L1 캐시 히트! 캐시된 결과를 사용합니다.");
+            log.info("==================== AI 분석 종료 (Diary ID: {}) ====================", diaryId);
             return saveEmotionAnalysisResult(diaryId, emotionResultNode, hash);
         }
+        log.info("[AI 분석 STEP 1/3] L1 캐시 미스. 다음 단계로 진행합니다.");
 
-        // 2. L2 캐시 (DB contentHash) 조회 (셀프 호출문제 해결 O : Repository 수정)
+        // 2. L2 캐시 (DB contentHash) 조회
+        log.info("[AI 분석 STEP 2/3] L2 캐시(DB contentHash) 조회를 시작합니다.");
         String hash = HashService.generateContentHash(text);
         // 자기 자신을 제외하고 동일한 해시를 가진 다른 레코드를 찾도록 수정
         Optional<DiaryRecord> existingDiaryRecordOpt = diaryRecordRepository.findTopByContentHashAndDiaryRecordIdNotOrderByCreatedAtDesc(hash, diaryId);
@@ -125,16 +144,21 @@ public class AiEmotionAnalysisService {
 
             // L1 캐시에 저장
             cachingService.setCachedResult(text, objectMapper.writeValueAsString(resultNode));
-            log.info("L2 캐시 조회 결과: {}", objectMapper.writeValueAsString(resultNode));
+            log.info("[AI 분석 STEP 2/3] L2 캐시 히트! DB에서 가져온 결과를 사용하고 L1 캐시에 저장합니다.");
+            log.info("==================== AI 분석 종료 (Diary ID: {}) ====================", diaryId);
             // 새로운 다이어리에 결과 저장 (해시는 저장할 필요 없음, 이미 동일 콘텐츠 존재)
             return saveEmotionAnalysisResult(diaryId, resultNode, hash);
         }
+        log.info("[AI 분석 STEP 2/3] L2 캐시 미스. 다음 단계로 진행합니다.");
         
         // 3. API 호출하여 감정 분석
+        log.info("[AI 분석 STEP 3/3] 캐시 미스. Gemini API 호출을 시작합니다.");
         JsonNode emotionResultNode = callGeminiForEmotionAnalysis(text);
+        log.info("[AI 분석 STEP 3/3] Gemini API 호출 성공. 결과를 L1 캐시에 저장합니다.");
         cachingService.setCachedResult(text, objectMapper.writeValueAsString(emotionResultNode)); 
 
         // 감정 분석 결과 및 해시 저장
+        log.info("==================== AI 분석 종료 (Diary ID: {}) ====================", diaryId);
         return saveEmotionAnalysisResult(diaryId, emotionResultNode, hash);
     }
     
@@ -145,7 +169,7 @@ public class AiEmotionAnalysisService {
      * @throws JsonProcessingException JSON 파싱 예외
      */
     private JsonNode callGeminiForEmotionAnalysis(String text) throws JsonProcessingException {
-        String url = UriComponentsBuilder.fromHttpUrl(GEMINI_API_URL)
+        String url = UriComponentsBuilder.fromHttpUrl(GEMINI_FLASH_LITE_API_URL)
                 .queryParam("key", apiKey)
                 .toUriString();
         HttpHeaders headers = new HttpHeaders();
@@ -156,22 +180,39 @@ public class AiEmotionAnalysisService {
         ObjectNode content = contentsArray.addObject();
         ArrayNode partsArray = content.putArray("parts");
         ObjectNode textPart = partsArray.addObject();
-        textPart.put("text",
-            "text의 감정을 분석하고 감정은 여러개(1~5개)일 수 있어 감정은 기쁨,슬픔,분노,불안,놀람,역겨움,중립이 있고 감정level:0~10 confidence은 너의 분석신뢰도 이고 ratio은 감정 비율맞춰서 분석해." +
-            "반드시 아래 JSON 형식으로만 응답해. 다른 설명이나 텍스트는 절대 포함하지 마. comment 필드는 필수적으로 포함해야 해.\n" +
-            "JSON형식:{emotions:[{label,level,confidence,description,ratio}], comment:\"일기에 대한 긍정적이고 따뜻한 코멘트 한 문장 작성.\"} " +
-            "text:" + text
-        );
-
-        ObjectNode generationConfig = requestBody.putObject("generationConfig");
-        generationConfig.put("temperature", 0.1);
-        generationConfig.put("topK", 1);
-        generationConfig.put("topP", 0.8);
-        generationConfig.put("maxOutputTokens", 1024);
+                textPart.put("text",
+                    "꼭 자세하고 성실하고 정확하게 분석해줘."+ 
+                    "text의 감정을 분석하고 감정은 여러개(1~5개)일 수 있어 감정은 기쁨,슬픔,분노,불안,놀람,역겨움,중립이 있고 감정level:0~10 confidence:0.0~1.0은 너의 분석신뢰도 이고 ratio은 감정 비율맞춰서 분석해." 
+                    + "반드시 아래 JSON 형식으로만 응답해. 다른 설명이나 텍스트는 절대 포함하지 마. comment 필드는 필수적으로 포함해야 해.\n" 
+                    + "JSON형식:{emotions:[{label,level,confidence,description,ratio}], comment:\"일기에 대한 긍정적이고 따뜻한 코멘트 한 문장 작성.\"} " + "text:" + text
+                );
+        
+                ObjectNode generationConfig = requestBody.putObject("generationConfig");
+                generationConfig.put("temperature", 0.1);
+                generationConfig.put("topK", 1);
+                generationConfig.put("topP", 0.8);
+                generationConfig.put("maxOutputTokens", 2048);
 
         String requestJson = objectMapper.writeValueAsString(requestBody);
         HttpEntity<String> request = new HttpEntity<>(requestJson, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+
+        log.info("[Gemini API Call] 감정 분석 API 요청을 보냅니다. URL: {}", url.split("key=")[0] + "key=...");
+        
+        ResponseEntity<String> response;
+        try {
+            response = webClient.post()
+                    .uri(url)
+                    .bodyValue(requestJson)
+                    .headers(h -> h.addAll(headers))
+                    .retrieve()
+                    .toEntity(String.class)
+                    .block(); // 비동기 응답을 동기적으로 기다림
+            log.info("[Gemini API Call] 감정 분석 API 응답을 성공적으로 받았습니다. (상태 코드: {})", response.getStatusCode());
+        } catch (Exception e) {
+            log.error("[Gemini API Call] 감정 분석 API 호출 중 심각한 오류 발생!", e);
+            throw new RuntimeException("Gemini API 호출에 실패했습니다.", e); // 예외를 다시 던져서 트랜잭션 롤백 유도
+        }
+
 
         JsonNode jsonResponse = objectMapper.readTree(response.getBody());
         String content_text = jsonResponse.path("candidates").path(0).path("content").path("parts").path(0).path("text").asText();
@@ -193,6 +234,8 @@ public class AiEmotionAnalysisService {
      */
     @Transactional
     public void generateAndSaveRecommendations(Long userId, Long diaryId, List<EmotionDto> emotions) throws JsonProcessingException {
+        log.info("==================== 추천 생성 시작 (Diary ID: {}) ====================", diaryId);
+        log.info("[추천 STEP 1/4] 사용자 정보 및 선호도 조회 시작. User ID: {}", userId);
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
         String userLocation = user.getLocation();
@@ -205,16 +248,24 @@ public class AiEmotionAnalysisService {
                 userPreference += pf.getCategory().toString() + ":" + pf.getGenre() + ", ";
             }
         }
+        log.info("[추천 STEP 1/4] 사용자 위치: {}, 선호도: {}", userLocation, userPreference);
 
         // 최근 20개 추천 정보 제외용 타이틀 생성 (RecommendationService에 위임)
+        log.info("[추천 STEP 2/4] 최근 추천 제외 목록 조회 시작.");
         List<String> recentRecommendations = recommendationService.getRecentRecommendations(userId);
         String excludeRecommendationTitle = String.join(",", recentRecommendations);
+        log.info("[추천 STEP 2/4] 제외할 추천 목록 ({}개): {}", recentRecommendations.size(), excludeRecommendationTitle);
 
         // Gemini API 호출하여 추천 생성
+        log.info("[추천 STEP 3/4] Gemini API 호출하여 추천 생성을 시작합니다.");
         JsonNode recommendationResultNode = callGeminiForRecommendations(emotions, userPreference, userLocation, excludeRecommendationTitle);
+        log.info("[추천 STEP 3/4] Gemini API로부터 추천 결과 수신 완료. 결과: {}", recommendationResultNode.toString());
+
 
         // 추천 정보 저장 (RecommendationService에 위임)
+        log.info("[추천 STEP 4/4] 수신된 추천 결과를 DB에 저장합니다.");
         recommendationService.saveRecommendations(diaryId, recommendationResultNode);
+        log.info("==================== 추천 생성 및 저장 완료 (Diary ID: {}) ====================", diaryId);
     }
 
     /**
@@ -227,11 +278,12 @@ public class AiEmotionAnalysisService {
      * @throws JsonProcessingException JSON 파싱 예외
      */
     private JsonNode callGeminiForRecommendations(List<EmotionDto> emotions, String userPreference, String userLocation, String excludeRecommendationTitle) throws JsonProcessingException {
-        String url = UriComponentsBuilder.fromHttpUrl(GEMINI_API_URL)
+        log.info("[Gemini API Call] 추천 생성 API 호출 시작.");
+        String url = UriComponentsBuilder.fromHttpUrl(GEMINI_FLASH_API_URL)
                 .queryParam("key", apiKey)
                 .toUriString();
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentType(MediaType.APPLICATION_JSON);     
 
         ObjectNode requestBody = objectMapper.createObjectNode();
         ArrayNode contentsArray = requestBody.putArray("contents");
@@ -249,14 +301,13 @@ public class AiEmotionAnalysisService {
         }
         String emotionString = emotionStringBuilder.length() > 0 ? emotionStringBuilder.toString() : "N/A";
 
-        textPart.put("text",
-            "분석된 감정을 기반으로, 유저 위치와 유저 취향 정보를 참고해서 " +
+        String prompt = "분석된 감정을 기반으로, 유저 위치와 유저 취향 정보를 참고해서 " +
             "취향에 맞는 3~6개, 취향 외의 것 2~4개를 추천해줘." +
             "추천 정보는 꼭!! 최근 20개 추천 정보 제외 추천 정보를 추천해줘." +
             "최근20개:"+ excludeRecommendationTitle + // 최근 20개 추천 정보 제외
-            "아래와 같이 카테고리별로 추천 기준을 반드시 지켜줘:\n" +
-            "type(대분류)기준 ex: MOVIE, MUSIC, CAFE, RESTAURANT, FOOD, YOUTUBE, ENTERTAINMENT, PLACE, WALKING_TRAIL, ACTIVITY, non_matching_preferences\n" +
-            "genre(소분류)기준 ex: ACTION, TERRACE, DESSERT 등 Cafe-Desert같이 이런거 말고 단일로 분류해줘 예를들어 MOVIE면 ACTION 같은거야 영어로만보내줘  " +
+            "아래와 같이 카테고리별로 추천 기준을 반드시 지켜줘 대분류 소분류는 무조건 영어야!!:\n" +
+            "type(대분류)기준:MOVIE, MUSIC, CAFE, RESTAURANT, FOOD, YOUTUBE, ENTERTAINMENT, PLACE, WALKING_TRAIL, ACTIVITY, non_matching_preferences\n" +
+            "genre(소분류)기준:ACTION, TERRACE, DESSERT 등 Cafe-Desert같이 이런거 말고 단일로 분류해줘 예를들어 MOVIE면 ACTION 같은거야 영어로만보내줘  " +
             "reson은 꼭 한국어로 설명해야되" +
             "- CAFE, RESTAURANT, FOOD: 반드시 실제 네이버 플레이스/지도에서 검색 가능한 구체적인 종류/특징(예: '테라스 카페', '매운 갈비찜', '디저트 카페', '이탈리안 레스토랑')로만 추천해줘.검색기반 엔진이기때문에 '따뜻한'등과 '가성비', '저렴한', '분위기 좋은' 등 추상적 수식어는 절대 넣지 마. 반드시 실제 검색 가능한 키워드로만 추천해.\n" +
             "- YOUTUBE, ENTERTAINMENT, MOVIE, BOOK, MUSIC: 반드시 실제 존재하는 정확한 이름(정확한 영화/책/음악/채널명 등)으로만 추천해줘. 예를 들어, '기생충', 'BTS', '해리포터', 'Love Poem', '미움받을 용기'처럼 실제 검색 가능한 고유명사(정확한 제목/이름)만 추천해. '아이유 신나는 노래', '미스터리 스릴러 영화', '긍정 심리학 도서', '다큐멘터리 영화' 등 장르, 수식어, 추상적 표현은 절대 넣지 마.\n" +
@@ -264,17 +315,43 @@ public class AiEmotionAnalysisService {
             "- non_matching_preferences(취향 외의 것)는 '반대 개념'이 아니라, 평소 선호하지 않거나 감정상태에 따라 시도해볼 만한 다른 장르/종류로만 추천해줘. 예를 들어, 평소 액션 영화를 좋아하면 멜로나 공포영화 등 다른 장르를 추천해줘. 단, 이 경우에도 반드시 실제 존재하는 정확한 이름(고유명사)만 추천해.\n" +
             "반드시 아래 JSON 형식으로만 응답해. 다른 설명이나 텍스트는 절대 포함하지 마.\n" +
             "JSON형식:{recommendations:{matching_preferences:[{type, genre, title, reason}], non_matching_preferences:[{type, genre, title, reason}]}} " +
-            "분석된감정:" + emotionString + " 유저선호취향:" + userPreference + " 유저위치:" + userLocation
-        );
+            "분석된감정:" + emotionString + " 유저선호취향:" + userPreference + " 유저위치:" + userLocation;
+
+        textPart.put("text", prompt);
+        
+        log.info("[Gemini API Call] 추천 생성 프롬프트 구성 완료. API 요청을 보냅니다. URL: {}", url.split("key=")[0] + "key=...");
+        log.info("[Gemini API Call] 전체 프롬프트 내용: {}", prompt); // DEBUG 레벨로 설정하여 평소에는 보이지 않도록 함
+
         ObjectNode generationConfig = requestBody.putObject("generationConfig");
         generationConfig.put("temperature", 0.1);
         generationConfig.put("topK", 1);
         generationConfig.put("topP", 0.8);
-        generationConfig.put("maxOutputTokens", 1024);
+        generationConfig.put("maxOutputTokens", 8192);
 
         String requestJson = objectMapper.writeValueAsString(requestBody);
-        HttpEntity<String> request = new HttpEntity<>(requestJson, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+
+        ResponseEntity<String> response;
+        try {
+            response = webClient.post()
+                    .uri(url)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(requestJson)
+                    .retrieve()
+                    .toEntity(String.class)
+                    .block();
+        } catch (Exception e) {
+            log.error("[Gemini API Call] 추천 생성 API 호출 중 심각한 오류 발생!", e);
+            throw new RuntimeException("Gemini API 호출에 실패했습니다.", e);
+        }
+
+
+        if (response == null) {
+            log.error("[Gemini API Call] 추천 생성 API로부터 응답을 받지 못했습니다.");
+            throw new RuntimeException("Gemini API로부터 응답을 받지 못했습니다.");
+        }
+        
+        log.info("[Gemini API Call] 추천 생성 API 응답을 성공적으로 받았습니다. (상태 코드: {})", response.getStatusCode());
+        log.info("[Gemini API Call] 전체 응답 내용: {}", response.getBody()); // DEBUG 레벨로 설정
 
         JsonNode jsonResponse = objectMapper.readTree(response.getBody());
         String content_text = jsonResponse.path("candidates").path(0).path("content").path("parts").path(0).path("text").asText();
@@ -282,6 +359,10 @@ public class AiEmotionAnalysisService {
                 .replaceAll("```json\\s*", "")
                 .replaceAll("```\\s*", "")
                 .trim();
+        
+        log.info("[Gemini API Call] 응답 내용 파싱 및 정리 완료.");
+        log.info("[Gemini API Call] 정리된 응답 내용: {}", cleanedContent);
+        
         return objectMapper.readTree(cleanedContent);
     }
 
@@ -353,10 +434,9 @@ public class AiEmotionAnalysisService {
 
     // 감정 분석 결과 조회 (감정 리스트 반환)
     public EmotionAnalysisResultDto getEmotionAnalysisResult(Long diaryId) {
-        DiaryRecord diaryRecord = diaryRecordRepository.findWithEmotionsById(diaryId);
-        if (diaryRecord == null) {
-            throw new EntityNotFoundException("DiaryRecord not found");
-        }
+        DiaryRecord diaryRecord = diaryRecordRepository.findWithEmotionsById(diaryId)
+            .orElseThrow(() -> new EntityNotFoundException("DiaryRecord not found"));
+
         List<EmotionDto> emotionDtos = new ArrayList<>();
         List<Emotion> emotions = diaryRecord.getEmotions();
         if (emotions != null && !emotions.isEmpty()) {
@@ -376,59 +456,50 @@ public class AiEmotionAnalysisService {
 
 
     /**
-   * 감정 분석 결과를 바탕으로 일별 통계 테이블(EmotionDailyStat)을 업데이트함
-   * @param diaryRecord 통계의 기준이 될 일기 엔티티 (entryDate, user 정보를 얻기 위함)
-   * @param emotions 분석된 감정 엔티티 목록
-   */
-  @Transactional
-  private void updateDailyStats(DiaryRecord diaryRecord, List<Emotion> emotions) {
-      Map<String, int[]> updates = new HashMap<>();
+     * 일별 감정 통계 업데이트 (EmotionDailyStat)
+     * - 분석된 감정을 집계하여 DB에 반영
+     */
+    @Transactional
+    private void updateDailyStats(DiaryRecord diaryRecord, List<Emotion> emotions) {
+        Map<String, int[]> updates = new HashMap<>();
 
-      // 분석된 감정들을 Map으로 집계합니다.
-      for (Emotion emotion : emotions) {
-          String label = emotion.getLabel();
+        // 1. 감정별 [횟수, 레벨합] 집계
+        for (Emotion emotion : emotions) {
+            String label = emotion.getLabel();
 
-          // Map에 해당 감정 라벨(Key)이 있는지 확인합니다.
-          if (!updates.containsKey(label)) {
-              // 없으면, [횟수, 레벨 총합]을 담을 새로운 정수 배열을 만들어 Map에 넣습니다.
-              updates.put(label, new int[]{0, 0});
-          }
+            if (!updates.containsKey(label)) {
+                updates.put(label, new int[]{0, 0});
+            }
 
-          // 이제 Map에 해당 라벨이 확실히 존재하므로, 값을 가져와서 업데이트합니다.
-          int[] values = updates.get(label);
-          values[0]++; // 횟수 1 증가
-          values[1] += emotion.getLevel(); // 레벨 합산
-      }
-
-      // 2. 집계된 Map을 기반으로 DB에 업데이트하는 로직 (이 부분은 동일합니다)
-      for (String label : updates.keySet()) {
-        // 현재 키(label)에 해당하는 값([횟수, 레벨총합] 배열)을 가져옵니다.
-        int[] values = updates.get(label);
-        int countToAdd = values[0];
-        int levelSumToAdd = values[1];
-  
-        // 기존 통계 데이터가 있는지 찾습니다.
-        Optional<EmotionDailyStat> existingStatOpt = emotionDailyStatRepository
-            .findByUser_UserIdAndDateAndEmotionLabel(diaryRecord.getUser().getUserId(), diaryRecord.getEntryDate(), label);
-  
-        EmotionDailyStat stat;
-        if (existingStatOpt.isPresent()) {
-            // 데이터가 있으면, 그 데이터를 가져옵니다.
-            stat = existingStatOpt.get();
-        } else {
-            // 데이터가 없으면, 새로운 EmotionDailyStat 객체를 생성합니다.
-            stat = new EmotionDailyStat();
-            stat.setUser(diaryRecord.getUser());
-            stat.setDate(diaryRecord.getEntryDate());
-            stat.setEmotionLabel(label);
+            int[] values = updates.get(label);
+            values[0]++; // 횟수 증가
+            values[1] += emotion.getLevel(); // 레벨 합산
         }
+
+        // 2. DB 반영 (Update or Create)
+        for (String label : updates.keySet()) {
+            int[] values = updates.get(label);
+            int countToAdd = values[0];
+            int levelSumToAdd = values[1];
   
-        // 4. 횟수와 레벨 총합을 더해준 뒤 저장합니다.
-        stat.setEmotionCount(stat.getEmotionCount() + countToAdd);
-        stat.setLevelSum(stat.getLevelSum() + levelSumToAdd);
-        emotionDailyStatRepository.save(stat);
+            Optional<EmotionDailyStat> existingStatOpt = emotionDailyStatRepository
+                .findByUser_UserIdAndDateAndEmotionLabel(diaryRecord.getUser().getUserId(), diaryRecord.getEntryDate(), label);
+  
+            EmotionDailyStat stat;
+            if (existingStatOpt.isPresent()) {
+                stat = existingStatOpt.get();
+            } else {
+                stat = new EmotionDailyStat();
+                stat.setUser(diaryRecord.getUser());
+                stat.setDate(diaryRecord.getEntryDate());
+                stat.setEmotionLabel(label);
+            }
+  
+            stat.setEmotionCount(stat.getEmotionCount() + countToAdd);
+            stat.setLevelSum(stat.getLevelSum() + levelSumToAdd);
+            emotionDailyStatRepository.save(stat);
+        }
     }
-  }
 
     /**
      * AI가 분석한 감정 결과에서 '중립' 감정의 비율을 조정함

@@ -1,0 +1,103 @@
+/* 전체 페이지 컨테이너 */
+.fullScreenContainer {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column; /* 아이템을 수직으로 정렬 */
+  justify-content: center;
+  align-items: center;
+  background: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2070&auto=format&fit=crop') no-repeat center center;
+  background-size: cover;
+  padding: 2rem;
+  text-align: center;
+  position: relative; /* 오버레이를 위한 기준점 */
+  font-family: 'Noto Sans KR', sans-serif;
+  overflow: hidden; /* 애니메이션을 위해 */
+}
+
+/* 배경 위에 씌울 어두운 오버레이 */
+.fullScreenContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3); /* 살짝 어둡게 */
+  z-index: 1;
+}
+
+/* 모든 콘텐츠는 오버레이 위에 위치 */
+.contentWrapper {
+  position: relative;
+  z-index: 2;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 메인 타이틀 */
+.mainTitle {
+  font-size: 4rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+  animation: slideInFromTop 1s ease-out;
+}
+
+/* 서브 타이틀 */
+.subtitle {
+  font-size: 1.25rem;
+  font-weight: 300;
+  margin-bottom: 4rem; /* 로그인 카드와의 간격 */
+  max-width: 500px;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  animation: slideInFromBottom 1s ease-out;
+}
+
+/* 로그인 카드 */
+.loginCard {
+  width: 22rem;
+  padding: 2rem;
+  border-radius: 15px;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  border: none;
+  color: #333;
+  animation: fadeIn 1.5s ease-out;
+}
+
+.loginTitle {
+  font-weight: 600;
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.kakaoLoginBtn {
+  background-color: #FEE500;
+  color: #191919;
+  border: none;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kakaoLoginBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(254, 229, 0, 0.4);
+}
+
+/* 애니메이션 정의 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideInFromTop {
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideInFromBottom {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

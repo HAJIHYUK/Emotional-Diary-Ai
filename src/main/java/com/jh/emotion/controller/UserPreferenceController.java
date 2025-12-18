@@ -3,11 +3,12 @@ package com.jh.emotion.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jh.emotion.dto.SuccessResponse;
@@ -27,19 +28,30 @@ public class UserPreferenceController {
     private final UserPreferenceService userPreferenceService;
 
     @PostMapping("/save")
-    public ResponseEntity<SuccessResponse<Void>> saveUserPreference(@RequestBody List<UserPreferenceInitialRequestDto> userPreferenceInitialDto, @RequestParam("userId") Long userId) {
-        userPreferenceService.saveUserPreference(userPreferenceInitialDto,userId);
+    public ResponseEntity<SuccessResponse<Void>> saveUserPreference(
+            @RequestBody List<UserPreferenceInitialRequestDto> userPreferenceInitialDto,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        userPreferenceService.saveUserPreference(userPreferenceInitialDto, userId);
         return ResponseEntity.ok(new SuccessResponse<>(0, "유저 선호도 저장 완료", null));
     }
 
     @GetMapping("/list")
-    public ResponseEntity<SuccessResponse<List<UserPreferenceResponseDto>>> getUserPreference(@RequestParam("userId") Long userId) {
+    public ResponseEntity<SuccessResponse<List<UserPreferenceResponseDto>>> getUserPreference(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = Long.parseLong(userDetails.getUsername());
         List<UserPreferenceResponseDto> preferences = userPreferenceService.getUserPreference(userId);
         return ResponseEntity.ok(new SuccessResponse<>(0, "유저 선호도 조회 완료", preferences));
     }
 
     @PostMapping("/delete")
-    public ResponseEntity<SuccessResponse<Void>> deactivateUserPreference(@RequestParam("userId") Long userId, @RequestBody List<Long> userPreferenceIds) {
+    public ResponseEntity<SuccessResponse<Void>> deactivateUserPreference(
+            @RequestBody List<Long> userPreferenceIds,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = Long.parseLong(userDetails.getUsername());
         userPreferenceService.deactivateUserPreference(userId, userPreferenceIds);
         return ResponseEntity.ok(new SuccessResponse<>(0, "유저 선호도 비활성화 완료", null));
     }
@@ -50,6 +62,4 @@ public class UserPreferenceController {
         userPreferenceService.addUserPreferenceByClickEvent((1L));
         return ResponseEntity.ok(new SuccessResponse<>(0, "유저 클릭이벤트 자동저장 완료", null));
     }
-
-
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, Button, Spinner, Alert, Row, Col, ListGroup, Badge, Modal } from 'react-bootstrap';
 import { getDiaryDetail, getRecommendations, deleteDiary, analyzeDiaryEmotion } from '../api/diaryApi';
-import { FaRegCalendarAlt, FaCloudSun, FaHeart, FaMusic, FaFilm, FaBook, FaTrash, FaArrowLeft, FaMagic, FaBrain, FaPencilAlt, FaLightbulb, FaYoutube, FaInstagram, FaMapMarkedAlt, FaBloggerB, FaRegNewspaper, FaLink } from 'react-icons/fa';
+import { FaRegCalendarAlt, FaCloudSun, FaHeart, FaMusic, FaFilm, FaBook, FaTrash, FaArrowLeft, FaMagic, FaBrain, FaPencilAlt, FaLightbulb, FaYoutube, FaInstagram, FaMapMarkedAlt, FaBloggerB, FaRegNewspaper, FaLink, FaInfoCircle } from 'react-icons/fa';
 
 // --- Helper & Presentational Components ---
 
@@ -18,28 +18,48 @@ const weatherMap = {
 
 const EmotionDisplay = ({ emotions }) => {
   const emotionStyle = {
-    '기쁨': { bg: '#FFFDE7', text: '#FBC02D' },      // 화사한 노란색
-    '슬픔': { bg: '#E0F7FA', text: '#0097A7' },      // 차분한 청록색
-    '분노': { bg: '#FFEBEE', text: '#D32F2F' },      // 톤 다운된 붉은색
-    '불안': { bg: '#F3E5F5', text: '#7B1FA2' },      // 깊은 보라색
-    '사랑': { bg: '#FCE4EC', text: '#D81B60' },      // 선명한 분홍색
-    '평온': { bg: '#E8F5E9', text: '#388E3C' },      // 편안한 녹색
-    '중립': { bg: '#ECEFF1', text: '#546E7A' },      // 세련된 블루-그레이
-    '기본': { bg: '#ECEFF1', text: '#546E7A' },
+    '기쁨': { bg: '#FFFDE7', text: '#FBC02D', border: '#FBC02D' },
+    '슬픔': { bg: '#E0F7FA', text: '#0097A7', border: '#0097A7' },
+    '분노': { bg: '#FFEBEE', text: '#D32F2F', border: '#D32F2F' },
+    '불안': { bg: '#F3E5F5', text: '#7B1FA2', border: '#7B1FA2' },
+    '사랑': { bg: '#FCE4EC', text: '#D81B60', border: '#D81B60' },
+    '평온': { bg: '#E8F5E9', text: '#388E3C', border: '#388E3C' },
+    '중립': { bg: '#ECEFF1', text: '#546E7A', border: '#546E7A' },
+    '기본': { bg: '#ECEFF1', text: '#546E7A', border: '#546E7A' },
   };
   const emojiMap = { '기쁨': '😊', '슬픔': '😢', '분노': '😡', '불안': '😟', '사랑': '🥰', '평온': '😌', '중립': '😐', '기본': '🤔' };
 
   return (
-    <div className="d-flex flex-wrap gap-2 mt-4">
+    <Row className="mt-4 g-3">
       {(emotions || []).map((e, index) => {
         const style = emotionStyle[e.label] || emotionStyle['기본'];
         return (
-          <span key={index} className="emotion-badge" style={{ backgroundColor: style.bg, color: style.text }}>
-            {emojiMap[e.label] || emojiMap['기본']} {e.label} ({(e.ratio * 100).toFixed(0)}%)
-          </span>
+          <Col key={index} md={6}>
+            <div 
+              className="emotion-report-item p-2" 
+              style={{ 
+                backgroundColor: style.bg, 
+                borderLeft: `4px solid ${style.border}`, 
+                borderRadius: '8px' 
+              }}
+            >
+              <div className="d-flex justify-content-between align-items-center">
+                <span className="fw-bold" style={{ color: style.text }}>
+                  {emojiMap[e.label] || emojiMap['기본']} {e.label}
+                </span>
+                <span className="fw-bold fs-5" style={{ color: style.text }}>
+                  {(e.ratio * 100).toFixed(0)}%
+                </span>
+              </div>
+              <p className="text-muted mt-1 mb-0 small">
+                <FaInfoCircle className="me-1" />
+                {e.description || '감정 설명이 없습니다.'}
+              </p>
+            </div>
+          </Col>
         );
       })}
-    </div>
+    </Row>
   );
 };
 
@@ -274,7 +294,7 @@ function DiaryDetail() {
           setIsAnalyzing(false);
         }
       }
-    }, 30000);
+    }, 120000); // 120초 (2분) 타임아웃으로 변경
   };
 
   const handleDelete = async () => {

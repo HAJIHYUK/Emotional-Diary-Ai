@@ -1,9 +1,5 @@
 package com.jh.emotion.service;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,7 +7,6 @@ import com.jh.emotion.dto.LinkInfo;
 import com.jh.emotion.entity.User;
 import com.jh.emotion.enums.LinkType;
 import com.jh.emotion.repository.UserRepository;
-import com.jh.emotion.service.GoogleSearchService; // (추가) GoogleSearchService 주입
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +21,8 @@ public class YoutubeAndNaverTypeClassificationService {
     private final YoutubeService youtubeService;
     private final NaverSearchService naverSearchService;
     private final UserRepository userRepository;
-    private final GoogleSearchService googleSearchService; // (추가) GoogleSearchService 주입
-
+    private final GoogleSearchService googleSearchService;
+    
     // AI감정분석후 추천 받은 후 추천받은 검색 타입 별로 분류 로직 
     public LinkInfo typeClassification(String type, String title, Long userId) {
         User user = userRepository.findById(userId)

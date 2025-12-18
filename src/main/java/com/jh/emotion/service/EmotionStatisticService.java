@@ -31,29 +31,19 @@ public class EmotionStatisticService {
      * EmotionDailyStat 테이블의 요약 데이터를 사용하여 빠르고 효율적으로 계산합니다.
      */
     public EmotionStatsResponseDto getEmotionStats(Long userId, LocalDate startDate, LocalDate endDate, String periodType) {
-        
-        // --- ▼ [로그 추가] 1. 메서드 시작 시 파라미터 확인 ▼ ---
-        log.info("통계 조회 시작: userId={}, startDate={}, endDate={}, periodType={}", userId, startDate, endDate, periodType);
-        // --- ▲ [로그 추가] 여기까지 ▲ ---
-
         List<Object[]> emotionStats = emotionDailyStatRepository.getEmotionStatsForPeriod(userId, startDate, endDate);
-
-        // --- ▼ [로그 추가] 2. DB 쿼리 결과 확인 ▼ ---
         log.info("DB 조회 결과 (row 수): {}", emotionStats.size());
         emotionStats.forEach(row -> log.info("  - Row data: {}", Arrays.toString(row)));
-        // --- ▲ [로그 추가] 여기까지 ▲ ---
-
         long totalEmotions = emotionStats.stream()
             .mapToLong(row -> (row[1] != null) ? ((Number) row[1]).longValue() : 0L) // 안전한 타입 변환
             .sum();
 
-    // 3. 데이터가 없는 경우 처리
     if (totalEmotions == 0) {
         String emptyPeriodLabel = createPeriodLabel(startDate, periodType);
         return new EmotionStatsResponseDto(periodType, emptyPeriodLabel, new ArrayList<>(), "데이터 없음", "해당 기간에 분석된 감정이 없어요.");
     }
 
-    // 4. DTO 리스트 및 최빈값 찾기
+    //DTO 리스트 및 최빈값 찾기
     List<EmotionStatsDto> dtos = new ArrayList<>();
     String topEmotion = "";
     long maxCount = 0L;
@@ -77,7 +67,10 @@ public class EmotionStatisticService {
         }
     }
 
-    // 5. 최종 응답 DTO 반환
+    //DTO 리스트를 count(빈도) 기준으로 내림차순 정렬
+    dtos.sort((d1, d2) -> Long.compare(d2.getCount(), d1.getCount()));
+
+    //최종 응답 DTO 반환
     String periodLabel = createPeriodLabel(startDate, periodType);
     String aiComment = String.format("이번 %s 동안 가장 자주 느낀 감정은 '%s'이네요!", periodLabel, topEmotion);
 

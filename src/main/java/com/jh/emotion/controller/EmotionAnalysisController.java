@@ -1,7 +1,9 @@
 package com.jh.emotion.controller;
 
-    import org.springframework.http.ResponseEntity;
-    import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal; // [추가]
+import org.springframework.security.core.userdetails.UserDetails; // [추가]
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,12 +28,15 @@ public class EmotionAnalysisController {
 
     private final AiEmotionAnalysisService aiEmotionAnalysisService;
     
-
     // 감정 분석 요청 및 감정분석 저장 후 결과 반환 
     @PostMapping("/analyze")
-    public ResponseEntity<SuccessResponse<EmotionAnalysisResultDto>> analyzeEmotion(@Valid @RequestBody EmotionAnalysisRequestDto request, @RequestParam("userId") Long userId) throws JsonProcessingException {
-        log.info("감정 분석 요청: {}", request.getDiaryRecordId());
-        EmotionAnalysisResultDto emotionAnalysisResultDto = aiEmotionAnalysisService.analyzeEmotionAndRecommend(userId,request.getDiaryRecordId());
+    public ResponseEntity<SuccessResponse<EmotionAnalysisResultDto>> analyzeEmotion(
+            @Valid @RequestBody EmotionAnalysisRequestDto request, 
+            @AuthenticationPrincipal UserDetails userDetails
+    ) throws JsonProcessingException {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        log.info("감정 분석 요청: diaryId={}, userId={}", request.getDiaryRecordId(), userId);
+        EmotionAnalysisResultDto emotionAnalysisResultDto = aiEmotionAnalysisService.analyzeEmotionAndRecommend(userId, request.getDiaryRecordId());
         return ResponseEntity.ok(new SuccessResponse<>(0, "감정 분석 완료 및 저장후 결과 반환", emotionAnalysisResultDto));
     }
 
@@ -41,4 +46,4 @@ public class EmotionAnalysisController {
         EmotionAnalysisResultDto emotionAnalysisResultDto = aiEmotionAnalysisService.getEmotionAnalysisResult(diaryId);
         return ResponseEntity.ok(new SuccessResponse<>(0, "감정 분석 결과 조회 완료", emotionAnalysisResultDto));
     }
-} 
+}

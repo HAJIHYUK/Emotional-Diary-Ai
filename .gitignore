@@ -38,4 +38,5 @@ out/
 
 
 /src/main/resources/application.properties
-GEMINI.md
+GEMINI.md.DS_Store
+Thumbs.db

@@ -1,8 +1,8 @@
 package com.jh.emotion.controller;
 
-import java.time.LocalDateTime;
-
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal; // [추가]
+import org.springframework.security.core.userdetails.UserDetails; // [추가]
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,10 +23,9 @@ public class EmotionStatisticController {
 
     private final EmotionStatisticService emotionStatisticService;
 
-    // 감정 통계 조회
     /**
      * 감정 통계 조회
-     * @param userId
+     * @param userDetails
      * @param startDate
      * @param endDate
      * @param periodType 는 WEEK 또는 MONTH 중 하나
@@ -34,12 +33,12 @@ public class EmotionStatisticController {
      */
     @GetMapping("/statistic")
     public ResponseEntity<SuccessResponse<EmotionStatsResponseDto>> getEmotionStatistic(
-            @RequestParam("userId") Long userId,
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("startDate") java.time.LocalDate startDate,
             @RequestParam("endDate") java.time.LocalDate endDate,
             @RequestParam("periodType") String periodType) {
+        Long userId = Long.parseLong(userDetails.getUsername());
         EmotionStatsResponseDto response = emotionStatisticService.getEmotionStats(userId, startDate, endDate, periodType);
         return ResponseEntity.ok(new SuccessResponse<>(0, "감정 통계 조회 완료", response));
     }
-
 }

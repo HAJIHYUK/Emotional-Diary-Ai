@@ -12,7 +12,5 @@ import lombok.Setter;
  @Setter
  @NoArgsConstructor
 public class EmotionAnalysisRequestDto { // 감정 분석 요청 DTO
-    
-    
-    private Long DiaryRecordId;
-} 
+    private Long diaryRecordId; 
+}

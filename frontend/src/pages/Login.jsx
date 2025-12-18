@@ -1,0 +1,41 @@
+import React from 'react';
+import { Card, Button } from 'react-bootstrap';
+import { RiKakaoTalkFill } from 'react-icons/ri';
+import styles from './Login.module.css';
+
+function Login() {
+    const KAKAO_JAVASCRIPT_KEY = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY;
+    const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
+
+    const kakaoLoginUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_JAVASCRIPT_KEY}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
+
+    return (
+        <div className={styles.fullScreenContainer}>
+            <div className={styles.contentWrapper}>
+                <h1 className={styles.mainTitle}>감정 일기</h1>
+                <p className={styles.subtitle}>
+                    당신의 하루를 기록하고, AI와 함께 마음을 돌보는 특별한 공간입니다.
+                </p>
+
+                <Card className={styles.loginCard}>
+                    <Card.Body>
+                        <Card.Title className={styles.loginTitle}>
+                            카카오로 1초만에 시작하기
+                        </Card.Title>
+                        <Button 
+                            href={kakaoLoginUrl}
+                            variant="warning" 
+                            size="lg" 
+                            className={`w-100 ${styles.kakaoLoginBtn}`}
+                        >
+                            <RiKakaoTalkFill className="me-2" />
+                            카카오 로그인
+                        </Button>
+                    </Card.Body>
+                </Card>
+            </div>
+        </div>
+    );
+}
+
+export default Login;

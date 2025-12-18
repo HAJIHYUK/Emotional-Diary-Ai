@@ -54,10 +54,10 @@ public class UserPreference { // 유저 선호도 정보
     private Integer useCount; // 사용 횟수
     
     @CreationTimestamp
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt; // 생성 일자 
     
     @UpdateTimestamp
-    private LocalDateTime lastUsedAt;
+    private LocalDateTime lastUsedAt; // 마지막 사용 일자
 
     @Column(nullable = false)
     private boolean isActive = true;

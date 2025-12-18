@@ -12,6 +12,7 @@ import {
 import { Button, ButtonGroup, Card, Row, Col, Spinner, Alert, Form, Stack } from 'react-bootstrap';
 import { getEmotionStats, getDiaryList } from '../api/diaryApi';
 import { FaSearch, FaRegGrinStars, FaCommentDots } from 'react-icons/fa';
+import StatsSummary from '../components/StatsSummary'; // StatsSummary 컴포넌트 가져오기
 
 // Chart.js 필수 요소 등록
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -355,15 +356,7 @@ function EmotionStats() {
               </Card>
             </Col>
             <Col lg={8} className="mb-4">
-              <Card className="h-100 shadow-sm">
-                <Card.Body>
-                  <FaCommentDots size={30} className="mb-3" style={{color: 'var(--primary-color)'}}/>
-                  <blockquote className="blockquote mb-0">
-                    <p className="fs-5">"{displayComment}"</p>
-                    <footer className="blockquote-footer mt-2">AI의 따뜻한 한마디</footer>
-                  </blockquote>
-                </Card.Body>
-              </Card>
+              <StatsSummary stats={stats} />
             </Col>
             <Col xs={12}>
               <Card className="shadow-sm">

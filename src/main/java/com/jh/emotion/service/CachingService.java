@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CachingService { // redis 를 이용한 캐시 서비스 (중복방지 + 캐시 효율적 사용)
     private final StringRedisTemplate redisTemplate;
-    private static final long CACHE_TTL = 24L; // 캐시 유효시간(시간)
+    private static final long CACHE_TTL = 30L; // 캐시 유효시간(일)
 
     /**
      * 캐시에서 결과 조회
@@ -37,6 +37,6 @@ public class CachingService { // redis 를 이용한 캐시 서비스 (중복방
     public void setCachedResult(String content, String result) {
         // HashService를 이용해 해시(key) 생성
         String hash = HashService.generateContentHash(content);
-        redisTemplate.opsForValue().set(hash, result, CACHE_TTL, TimeUnit.HOURS);
+        redisTemplate.opsForValue().set(hash, result, CACHE_TTL, TimeUnit.DAYS);
     }
 }

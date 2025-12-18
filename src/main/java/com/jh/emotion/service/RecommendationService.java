@@ -28,7 +28,7 @@ public class RecommendationService {
     private final YoutubeAndNaverTypeClassificationService typeClassificationService;
 
     /**
-     * 감정 분석 결과 추천 정보 저장 (수정됨)
+     * 감정 분석 결과 추천 정보 저장
      */
     @Transactional
     public void saveRecommendations(Long diaryId, JsonNode result) {
@@ -41,7 +41,6 @@ public class RecommendationService {
         JsonNode matching = recommendationsNode.path("matching_preferences");
         if (matching.isArray()) {
             for (JsonNode rec : matching) {
-                // typeClassification 호출하여 linkInfo 가져옴
                 LinkInfo linkInfo = typeClassificationService.typeClassification(
                     rec.path("type").asText(),
                     rec.path("title").asText(),

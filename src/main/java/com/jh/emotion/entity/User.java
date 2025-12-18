@@ -25,11 +25,14 @@ public class User {//유저 정보
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
+
+    @Column(unique = true, nullable = true)
+    private Long kakaoId;
     
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = true)
     private String email;
     
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String passwordHash;
 
     @Column(nullable = false)
@@ -37,12 +40,18 @@ public class User {//유저 정보
     
     @Column(nullable = true)
     private String location;
+
+    @Column(nullable = true) //카카오 프로필 이미지 URL
+    private String profileImageUrl;
     
-    @Column(nullable = true)
+    @Column(nullable = false)
     private boolean isPremium;
     
     @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted;
+    private boolean isDeleted = false; // [수정] 기본값 false 설정
+    
+    @Column(name = "deleted_at", nullable = true) // [추가] 탈퇴 시각 기록
+    private LocalDateTime deletedAt;
     
     @CreationTimestamp
     private LocalDateTime createdAt;

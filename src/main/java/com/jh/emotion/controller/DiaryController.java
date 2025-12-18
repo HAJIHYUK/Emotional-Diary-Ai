@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal; // [추가]
+import org.springframework.security.core.userdetails.UserDetails; // [추가]
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody; // import 추가
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +20,6 @@ import com.jh.emotion.dto.DiaryWriteDto;
 import com.jh.emotion.dto.SuccessResponse;
 import com.jh.emotion.dto.UserRecommendationResponseDto;
 import com.jh.emotion.entity.DiaryRecord;
-import com.jh.emotion.service.RecommendationService; // RecommendationService import 추가
 import com.jh.emotion.service.DiaryService;
 import com.jh.emotion.service.RecommendationService;
 
@@ -32,20 +33,28 @@ import lombok.extern.slf4j.Slf4j;
 public class DiaryController {
 
     private final DiaryService diaryService;
-    private final RecommendationService recommendationService; // RecommendationService 주입
+    private final RecommendationService recommendationService;
 
     //일기 작성
     @PostMapping("/write")
-    public ResponseEntity<SuccessResponse<Map<String, Object>>> writeDiary(@RequestBody DiaryWriteDto dto) {
+    public ResponseEntity<SuccessResponse<Map<String, Object>>> writeDiary(
+            @RequestBody DiaryWriteDto dto,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        dto.setUserId(userId); // DTO에 userId 설정
         DiaryRecord record = diaryService.createDiaryRecord(dto);
         Map<String, Object> data = new HashMap<>();
-        data.put("recordId", record.getDiaryRecordId()); //일기 번호
+        data.put("recordId", record.getDiaryRecordId());
         return ResponseEntity.ok(new SuccessResponse<>(0, "일기 생성 완료", data));
     }
 
     //일기 목록 조회
     @GetMapping("/list")
-    public ResponseEntity<SuccessResponse<List<DiaryListDto>>> getDiaryList(@RequestParam("userId") Long userId) {
+    public ResponseEntity<SuccessResponse<List<DiaryListDto>>> getDiaryList(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = Long.parseLong(userDetails.getUsername());
         List<DiaryListDto> list = diaryService.getDiaryList(userId);
         return ResponseEntity.ok(new SuccessResponse<>(0, "일기 목록 조회 완료", list));
     }
@@ -59,7 +68,13 @@ public class DiaryController {
 
     //일기 상세 수정
     @PostMapping("/update")
-    public ResponseEntity<SuccessResponse<Void>> updateDiary(@RequestParam("diaryId") Long diaryId, @RequestBody DiaryWriteDto dto) { // @RequestBody 추가
+    public ResponseEntity<SuccessResponse<Void>> updateDiary(
+            @RequestParam("diaryId") Long diaryId, 
+            @RequestBody DiaryWriteDto dto,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        dto.setUserId(userId); //DTO에 userId 설정
         diaryService.updateDiaryRecord(diaryId, dto);
         return ResponseEntity.ok(new SuccessResponse<>(0, "수정 완료", null));
     }
@@ -77,8 +92,4 @@ public class DiaryController {
         List<UserRecommendationResponseDto> recommendations = recommendationService.getRecommendations(diaryId);
         return ResponseEntity.ok(new SuccessResponse<>(0, "추천 정보 조회 완료", recommendations));
     }
-
-    
-    
-    
 }

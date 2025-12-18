@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation, Link } from 'react-router-dom';
 import { Form, Button, Card, Alert, Spinner, Row, Col } from 'react-bootstrap';
 import { createDiary, updateDiary, getDiaryDetail } from '../api/diaryApi';
 import { FaPaperPlane, FaTimes } from 'react-icons/fa';
+import TopicSuggester from '../components/TopicSuggester'; // TopicSuggester 컴포넌트 가져오기
 
 function DiaryWrite() {
   const { id } = useParams();
@@ -42,6 +43,11 @@ function DiaryWrite() {
       }
     }
   }, [id, isEditMode, location.state]);
+
+  // 추천 주제를 일기 내용에 추가하는 함수
+  const handleTopicSelect = (topicText) => {
+    setContent(prevContent => prevContent ? `${prevContent}\n\n${topicText}` : topicText);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -103,6 +109,9 @@ function DiaryWrite() {
                 </Form.Group>
               </Col>
             </Row>
+
+            {/* 일기 주제 추천 컴포넌트 추가 */}
+            {!isEditMode && <TopicSuggester onTopicSelect={handleTopicSelect} />}
 
             <Form.Group controlId="formDiaryContent">
               <Form.Label className="fw-bold fs-5 mb-3">오늘의 이야기</Form.Label>

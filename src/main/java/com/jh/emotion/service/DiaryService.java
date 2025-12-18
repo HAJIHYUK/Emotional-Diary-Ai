@@ -89,10 +89,8 @@ public class DiaryService {
 
     //일기 상세 조회
     public DiaryDetailDto getDiaryDetail(Long diaryId) {
-        DiaryRecord diaryRecord = diaryRecordRepository.findWithEmotionsById(diaryId);
-        if (diaryRecord == null) {
-            throw new EntityNotFoundException("DiaryRecord not found");
-        }
+        DiaryRecord diaryRecord = diaryRecordRepository.findWithEmotionsById(diaryId)
+            .orElseThrow(() -> new EntityNotFoundException("DiaryRecord not found"));
 
         DiaryDetailDto diaryDetailDto = new DiaryDetailDto();
         //일기 기본 정보 설정

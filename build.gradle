@@ -45,6 +45,7 @@ dependencies {
     
     // Spring Boot Web - MVC 기반 웹 개발
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux' 
     
     // Spring Security - 보안, 인증/인가 처리
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -55,10 +56,7 @@ dependencies {
     // OAuth2 로그인 (카카오, 구글 등)
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-    
-    // JSP 및 JSTL 지원 (내장 톰캣 사용) - 구버전 주석 처리
-    // implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'
-    // implementation 'javax.servlet:jstl:1.2'
+
     
     // 최신 Jakarta EE 9+ 호환 JSP 및 JSTL
     implementation 'org.apache.tomcat:tomcat-jasper:10.1.19'
@@ -75,12 +73,17 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     
-    // Lombok - 코드 간소화 (빌드 시에만 사용)
+    // Lombok - 코드 간소화
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     
     // WAR 패키징 지원
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+
+    //JWT (JSON Web Token) 라이브러리
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     
     // -----------------------------------------------
     // 추가된 의존성 (AI 감정일기 및 추천 서비스 확장 관련)

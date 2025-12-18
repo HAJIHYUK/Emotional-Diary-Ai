@@ -1,13 +1,13 @@
 import api from './axiosConfig';
 
-// 참고: userId는 '1'로 고정합니다.
-const MOCK_USER_ID = 1;
+// [제거] const MOCK_USER_ID = 1;
 
 /**
  * 일기 목록을 조회합니다.
  */
 export const getDiaryList = () => {
-  return api.get(`/api/diary/list?userId=${MOCK_USER_ID}`);
+  // [수정] userId 파라미터 제거
+  return api.get(`/api/diary/list`);
 };
 
 /**
@@ -31,9 +31,8 @@ export const getRecommendations = (diaryId) => {
  * @param {{content: string, weather?: string, entryDate?: string}} diaryData - 일기 데이터
  */
 export const createDiary = (diaryData) => {
+  // [수정] DTO에서 userId 필드 제거
   const payload = {
-    // TODO: 추후 로그인 기능 구현 시 실제 유저 ID로 변경해야 함
-    userId: MOCK_USER_ID,
     content: diaryData.content,
     weather: diaryData.weather || null,
     entryDate: diaryData.entryDate || null,
@@ -48,8 +47,8 @@ export const createDiary = (diaryData) => {
  * @param {{content: string}} diaryData - {내용}
  */
 export const updateDiary = (diaryId, diaryData) => {
+  // [수정] DTO에서 userId 필드 제거
   const payload = {
-    userId: MOCK_USER_ID, // 누락되었던 유저 ID 추가
     content: diaryData.content,
     weather: diaryData.weather || null,
     entryDate: diaryData.entryDate || null,
@@ -70,7 +69,8 @@ export const deleteDiary = (diaryId) => {
  * @param {number} diaryId 분석할 일기 ID
  */
 export const analyzeDiaryEmotion = (diaryId) => {
-  return api.post(`/api/emotion/analyze?userId=${MOCK_USER_ID}`, { diaryRecordId: diaryId });
+  // [수정] userId 파라미터 제거
+  return api.post(`/api/emotion/analyze`, { diaryRecordId: diaryId });
 };
 
 /**
@@ -80,9 +80,9 @@ export const analyzeDiaryEmotion = (diaryId) => {
  * @param {string} periodType 기간 타입 ('WEEK' 또는 'MONTH')
  */
 export const getEmotionStats = (startDate, endDate, periodType) => {
+  // [수정] userId 파라미터 제거
   return api.get(`/api/emotion/statistic`, {
     params: {
-      userId: MOCK_USER_ID,
       startDate,
       endDate,
       periodType,
@@ -91,18 +91,28 @@ export const getEmotionStats = (startDate, endDate, periodType) => {
 };
 
 /**
+ * 카카오 인증 코드를 백엔드로 보내 로그인을 처리하고 JWT를 받아옵니다.
+ * @param {string} code - 카카오로부터 받은 인증 코드
+ */
+export const loginWithKakao = (code) => {
+  return api.post('/api/auth/kakao', { code });
+};
+
+/**
  * 현재 사용자의 취향 목록을 조회합니다.
  */
 export const getUserPreferences = () => {
-  return api.get(`/api/user-preference/list?userId=${MOCK_USER_ID}`);
+  // [수정] userId 파라미터 제거
+  return api.get(`/api/user-preference/list`);
 };
 
 /**
  * 사용자의 취향 목록을 업데이트(전체 교체)합니다.
- * @param {Array<{preferenceType: string, preferenceCategory: string}>} preferences - 선택된 취향 객체의 배열
+ * @param {Array<{category: string, genres: string[]}>} preferences - 선택된 취향 객체의 배열
  */
 export const updateUserPreferences = (preferences) => {
-  return api.post(`/api/user-preference/save?userId=${MOCK_USER_ID}`, preferences);
+  // [수정] userId 파라미터 제거
+  return api.post(`/api/user-preference/save`, preferences);
 };
 
 /**
@@ -110,5 +120,30 @@ export const updateUserPreferences = (preferences) => {
  * @param {number[]} preferenceIds - 삭제할 취향 ID의 배열
  */
 export const deleteUserPreferences = (preferenceIds) => {
-  return api.post(`/api/user-preference/delete?userId=${MOCK_USER_ID}`, preferenceIds);
+  // [수정] userId 파라미터 제거
+  return api.post(`/api/user-preference/delete`, preferenceIds);
+};
+
+/**
+ * 사용자의 위치 정보를 저장합니다.
+ * @param {string} location - 저장할 위치 문자열
+ */
+export const saveUserLocation = (location) => {
+  return api.post(`/api/user-data/savelocation`, null, { params: { location } });
+};
+
+/**
+ * 사용자 계정을 비활성화(탈퇴)합니다.
+ */
+export const deactivateUser = () => {
+  // [수정] userId 파라미터 제거
+  return api.post(`/api/user-data/deactivate`);
+};
+
+/**
+ * 일기 주제를 추천받습니다.
+ * @param {string} type - 추천 타입 ('random' 또는 감정 카테고리 e.g., 'JOY').
+ */
+export const getDiaryTopics = (type) => {
+  return api.get('/api/diary-topics', { params: { type } });
 };
