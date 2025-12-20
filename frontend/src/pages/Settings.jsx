@@ -25,7 +25,7 @@ function Settings() {
   const handleDeactivateUser = async () => {
     handleCloseModal();
     try {
-      // [수정] userId를 보내지 않음
+      // userId를 보내지 않음
       await deactivateUser(); 
       alert('회원 탈퇴가 성공적으로 처리되었습니다. 이용해주셔서 감사합니다.');
       handleLogout();

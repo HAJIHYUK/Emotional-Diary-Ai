@@ -13,7 +13,7 @@ import Login from './pages/Login';
 import KakaoRedirectHandler from './pages/auth/KakaoRedirectHandler';
 import './index.css';
 
-// [추가] 라우팅 및 레이아웃 로직을 담당할 내부 컴포넌트
+// 라우팅 및 레이아웃 로직을 담당할 내부 컴포넌트
 function AppLayout() {
   const isUserLoggedIn = !!localStorage.getItem('jwt');
   const location = useLocation(); // 이제 Router 내부에 있으므로 정상 작동
@@ -62,7 +62,7 @@ function AppLayout() {
   );
 }
 
-// [수정] 최상위 App 컴포넌트는 Router만 제공
+// 최상위 App 컴포넌트는 Router만 제공
 function App() {
   return (
     <Router>

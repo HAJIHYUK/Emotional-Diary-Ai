@@ -22,7 +22,7 @@ function KakaoRedirectHandler() {
 
             localStorage.setItem('jwt', token);
             
-            // [수정] isNewUser 값에 따라 다른 페이지로 이동시킵니다.
+            // isNewUser 값에 따라 다른 페이지로 이동시킵니다.
             if (isNewUser) {
                 // 신규 사용자는 온보딩 플로우 페이지로 이동
                 window.location.href = '/onboarding-flow';

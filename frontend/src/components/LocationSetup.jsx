@@ -5,18 +5,18 @@ import { saveUserLocation } from '../api/diaryApi';
 
 function LocationSetup({ onSave, onSkip, showSkipButton = true }) {
   const [displayAddress, setDisplayAddress] = useState(''); // 화면 표시용 주소
-  const [areaAddress, setAreaAddress] = useState(''); // [수정] 백엔드 전송용 '지역' 주소
+  const [areaAddress, setAreaAddress] = useState(''); // 백엔드 전송용 '지역' 주소
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleSearchAddress = () => {
     new window.daum.Postcode({
       oncomplete: function(data) {
-        // [수정] 화면 표시용 주소와 백엔드 전송용 '동' 이름을 분리하여 저장
+        // 화면 표시용 주소와 백엔드 전송용 '동' 이름을 분리하여 저장
         const selectedAddress = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
         setDisplayAddress(selectedAddress); // 화면에는 전체 주소 표시
 
-        // [수정] '시/도' + '시/군/구' + '법정동' 조합으로 주소 생성
+        // '시/도' + '시/군/구' + '법정동' 조합으로 주소 생성
         let addressForBackend = data.sido;
         if (data.sigungu) {
           addressForBackend += ' ' + data.sigungu;
@@ -35,14 +35,14 @@ function LocationSetup({ onSave, onSkip, showSkipButton = true }) {
     e.preventDefault();
     setError(null);
 
-    if (!areaAddress.trim()) { // [수정] '지역' 주소가 있는지 확인
+    if (!areaAddress.trim()) { // '지역' 주소가 있는지 확인
       setError('주소 검색을 통해 위치를 설정해주세요.');
       return;
     }
 
     setLoading(true);
     try {
-      await saveUserLocation(areaAddress.trim()); // [수정] 최종 조합된 주소를 백엔드로 전송
+      await saveUserLocation(areaAddress.trim()); // 최종 조합된 주소를 백엔드로 전송
       alert('위치 정보가 성공적으로 저장되었습니다!');
       if (onSave) onSave();
     } catch (err) {
@@ -75,7 +75,7 @@ function LocationSetup({ onSave, onSkip, showSkipButton = true }) {
             <Form.Control
               type="text"
               placeholder="오른쪽 '주소 검색' 버튼을 눌러주세요."
-              value={displayAddress} // [수정] 화면에는 전체 주소 표시
+              value={displayAddress} // 화면에는 전체 주소 표시
               readOnly
               disabled={loading}
             />

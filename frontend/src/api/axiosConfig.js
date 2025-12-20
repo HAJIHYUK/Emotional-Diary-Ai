@@ -19,7 +19,7 @@ api.interceptors.request.use(
     }
 );
 
-// --- [추가] 응답 인터셉터 ---
+// --- 응답 인터셉터 ---
 api.interceptors.response.use(
     // 1. 성공적인 응답은 그대로 통과시킵니다.
     (response) => {
@@ -27,7 +27,7 @@ api.interceptors.response.use(
     },
     // 2. 에러가 발생한 응답을 처리합니다.
     (error) => {
-        // --- [디버깅 로그 추가] ---
+        // --- 디버깅 로그 ---
         console.log("Axios 응답 인터셉터 에러 발생!");
         console.log("전체 에러 객체:", error);
         console.log("에러 config:", error.config);
@@ -40,7 +40,7 @@ api.interceptors.response.use(
         } else {
             console.log("에러에 response 객체가 없습니다.");
         }
-        // --- [디버깅 로그 끝] ---
+        // --- 디버깅 로그 끝 ---
 
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
             console.log(`${error.response.status} 에러 감지. 로그아웃 처리 시작.`);

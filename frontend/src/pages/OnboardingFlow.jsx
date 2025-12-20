@@ -19,7 +19,7 @@ function OnboardingFlow() {
   };
 
   return (
-    <div className="onboarding-container"> {/* [수정] className 추가 */}
+    <div className="onboarding-container"> {/* className 추가 */}
       {step === 1 && (
         <LocationSetup 
           onSave={handleLocationComplete}
