@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtTokenProvider {
 
     private final Key key;
-    private final long tokenValidityInMilliseconds;
+    private final long tokenValidityInMilliseconds; 
 
     // 생성자를 통해 application.properties에 설정한 값들을 주입받음
     public JwtTokenProvider(

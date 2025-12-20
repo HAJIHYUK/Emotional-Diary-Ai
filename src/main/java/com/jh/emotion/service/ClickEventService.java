@@ -1,5 +1,7 @@
 package com.jh.emotion.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +41,16 @@ public class ClickEventService {
             recId = userClickEventDto.getRecommendationId();
         } else {
             throw new EntityNotFoundException("RecommendationId is null");
+        }
+
+        //오늘 이미 클릭한 추천인지 확인 (중복 방지)를 위한 시간 설정
+        LocalDateTime startOfDay = java.time.LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = java.time.LocalDate.now().atTime(java.time.LocalTime.MAX);
+        
+        //오늘 이미 클릭한 추천인지 확인 (중복 방지)
+        if (userClickEventRepository.existsByUser_UserIdAndRecommendation_RecommendationIdAndCreatedAtBetween(userId, recId, startOfDay, endOfDay)) {
+            log.info("[ClickEvent] 이미 오늘 클릭한 추천입니다. 저장을 건너뜁니다. (userId={}, recId={})", userId, recId);
+            return;
         }
 
         Recommendation recommendation = recommendationRepository.findById(recId)

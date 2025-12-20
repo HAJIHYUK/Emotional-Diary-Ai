@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, Button, Spinner, Alert, Row, Col, ListGroup, Badge, Modal } from 'react-bootstrap';
-import { getDiaryDetail, getRecommendations, deleteDiary, analyzeDiaryEmotion } from '../api/diaryApi';
+import { getDiaryDetail, getRecommendations, deleteDiary, analyzeDiaryEmotion, saveUserClickEvent } from '../api/diaryApi';
 import { FaRegCalendarAlt, FaCloudSun, FaHeart, FaMusic, FaFilm, FaBook, FaTrash, FaArrowLeft, FaMagic, FaBrain, FaPencilAlt, FaLightbulb, FaYoutube, FaInstagram, FaMapMarkedAlt, FaBloggerB, FaRegNewspaper, FaLink, FaInfoCircle } from 'react-icons/fa';
 
 // --- Helper & Presentational Components ---
@@ -134,16 +134,14 @@ const AnalysisCard = ({ isAnalyzing, diary }) => (
   </Card>
 );
 
-const RecommendationsCard = ({ recommendations }) => {
+const RecommendationsCard = ({ recommendations, onRecommendationClick }) => {
       const getYouTubeVideoId = (url) => {
         if (!url) return null;
         try {
           const urlObj = new URL(url);
-          // Handles short URLs like youtu.be/VIDEO_ID
           if (urlObj.hostname === 'youtu.be') {
             return urlObj.pathname.slice(1);
           }
-          // Handles long URLs like youtube.com/watch?v=VIDEO_ID
           if (urlObj.hostname.includes('youtube.com')) {
             return urlObj.searchParams.get('v');
           }
@@ -151,6 +149,21 @@ const RecommendationsCard = ({ recommendations }) => {
         } catch (error) {
           console.error("Invalid URL for YouTube parsing:", error);
           return null;
+        }
+      };
+
+      // 유튜브 오버레이 클릭 핸들러
+      const handleOverlayClick = (e, rec, videoId) => {
+        // 1. 서버로 클릭 이벤트 전송
+        onRecommendationClick(rec);
+        
+        // 2. 오버레이 숨김
+        e.currentTarget.style.display = 'none';
+        
+        // 3. iframe 자동 재생 트리거 (src에 autoplay=1 추가)
+        const iframe = e.currentTarget.nextElementSibling;
+        if (iframe) {
+          iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
         }
       };
 
@@ -162,7 +175,13 @@ const RecommendationsCard = ({ recommendations }) => {
               const videoId = getYouTubeVideoId(rec.link);
               return (
                 <ListGroup.Item key={rec.recommendationId} className="recommendation-item">
-                  <a href={rec.link} target="_blank" rel="noopener noreferrer" className="recommendation-link-area">
+                  <a 
+                    href={rec.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="recommendation-link-area"
+                    onClick={() => onRecommendationClick(rec)}
+                  >
                     <span style={{ fontSize: '1.5rem' }}><RecommendationIcon linkType={rec.linkType} /></span>
                     <div className="recommendation-text">
                       <strong className="d-block">{rec.title}</strong>
@@ -170,13 +189,35 @@ const RecommendationsCard = ({ recommendations }) => {
                     </div>
                   </a>
                   {rec.linkType === 'YOUTUBE' && videoId && (
-                    <div className="video-preview-container mt-3">
+                    <div className="video-preview-container mt-3" style={{ position: 'relative', width: '100%', maxWidth: '480px', aspectRatio: '16/9' }}>
+                       {/* 유튜브 재생 클릭 감지를 위한 투명 오버레이 */}
+                       <div 
+                          className="youtube-click-overlay"
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            zIndex: 10,
+                            cursor: 'pointer',
+                          }}
+                          onClick={(e) => handleOverlayClick(e, rec, videoId)}
+                        />
                       <iframe
                         src={`https://www.youtube.com/embed/${videoId}`}
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                         title={rec.title}
+                        style={{ 
+                          position: 'absolute', 
+                          top: 0, 
+                          left: 0, 
+                          width: '100%', 
+                          height: '100%', 
+                          zIndex: 1 
+                        }}
                       ></iframe>
                     </div>
                   )}
@@ -217,6 +258,9 @@ function DiaryDetail() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  
+  // 클릭 중복 방지를 위한 로컬 상태 (잠깐 동안 클릭 막기)
+  const [clickedRecommendations, setClickedRecommendations] = useState(new Set());
 
   const pollingRef = useRef(null);
   const timeoutRef = useRef(null);
@@ -231,6 +275,31 @@ function DiaryDetail() {
       timeoutRef.current = null;
     }
   }, []);
+
+  const handleRecommendationClick = async (rec) => {
+    // 1. 이미 클릭 목록에 있으면 무시 (간단한 디바운스)
+    if (clickedRecommendations.has(rec.recommendationId)) {
+      return;
+    }
+
+    // 2. 클릭 목록에 추가
+    setClickedRecommendations(prev => new Set(prev).add(rec.recommendationId));
+
+    try {
+      // 3. 서버로 이벤트 전송
+      await saveUserClickEvent({
+        recommendationId: rec.recommendationId,
+        type: rec.type, // 대분류 (MOVIE, MUSIC 등)
+        title: rec.title,
+        genre: rec.genre // 소분류 (ACTION, BALLAD 등)
+      });
+      console.log('클릭 이벤트 전송 성공:', rec.title);
+    } catch (err) {
+      console.error('클릭 이벤트 전송 실패:', err);
+      // 실패 시 다시 클릭할 수 있게 제거할 수도 있지만, 
+      // 사용자 경험상 그냥 두는 게 나을 수 있음 (이미 이동했거나 재생 중이니까)
+    }
+  };
 
   const fetchRecommendations = useCallback(async () => {
     try {
@@ -334,7 +403,10 @@ function DiaryDetail() {
               <AnalysisCard isAnalyzing={isAnalyzing} diary={diary} />
             </Col>
             <Col md={12} className="mb-4">
-              <RecommendationsCard recommendations={recommendations} />
+              <RecommendationsCard 
+                recommendations={recommendations} 
+                onRecommendationClick={handleRecommendationClick} 
+              />
             </Col>
           </Row>
         </>

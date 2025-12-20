@@ -136,3 +136,11 @@ export const deactivateUser = () => {
 export const getDiaryTopics = (type) => {
   return api.get('/api/diary-topics', { params: { type } });
 };
+
+/**
+ * 사용자 클릭 이벤트를 저장합니다.
+ * @param {{recommendationId: number, type: string, title: string, genre: string}} eventData 
+ */
+export const saveUserClickEvent = (eventData) => {
+  return api.post('/api/user-click-event/save', eventData);
+};

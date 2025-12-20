@@ -27,4 +27,7 @@ public interface UserClickEventRepository extends JpaRepository<UserClickEvent, 
         @Param("after") LocalDateTime after,
         @Param("minCount") long minCount
     );
+
+    //특정 유저가 특정 기간 내에 특정 추천을 클릭했는지 여부 확인 (중복 클릭 방지용)
+    boolean existsByUser_UserIdAndRecommendation_RecommendationIdAndCreatedAtBetween(Long userId, Long recommendationId, LocalDateTime start, LocalDateTime end);
 }

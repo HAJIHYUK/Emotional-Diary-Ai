@@ -9,7 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Component
-@ConfigurationProperties(prefix = "api.youtube") // 접두사가 'api.youtube'인 설정을 찾음
+@ConfigurationProperties(prefix = "api.youtube") // 접두사가 'api.youtube'인 설정을 찾음 , properties 파일에 설정한 값을 주입받음
 @Getter
 @Setter
 public class YouTubeConfig {
