@@ -54,7 +54,10 @@ public class DiaryService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        List<DiaryRecord> diaryRecords = diaryRecordRepository.findByUser_UserId(userId);
+        // [N+1 문제 해결] 기존 findByUser_UserId 대신 Fetch Join이 적용된 메서드 사용
+        // List<DiaryRecord> diaryRecords = diaryRecordRepository.findByUser_UserId(userId);
+        List<DiaryRecord> diaryRecords = diaryRecordRepository.findAllWithEmotionsByUser_UserId(userId);
+        
         List<DiaryListDto> diaryListDtos = new ArrayList<>();
 
         for (DiaryRecord diaryRecord : diaryRecords) {
@@ -89,7 +92,7 @@ public class DiaryService {
 
     //일기 상세 조회
     public DiaryDetailDto getDiaryDetail(Long diaryId) {
-        DiaryRecord diaryRecord = diaryRecordRepository.findWithEmotionsById(diaryId)
+        DiaryRecord diaryRecord = diaryRecordRepository.findByDiaryRecordId(diaryId)
             .orElseThrow(() -> new EntityNotFoundException("DiaryRecord not found"));
 
         DiaryDetailDto diaryDetailDto = new DiaryDetailDto();

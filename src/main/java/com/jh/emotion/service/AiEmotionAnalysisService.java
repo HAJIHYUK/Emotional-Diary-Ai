@@ -434,7 +434,7 @@ public class AiEmotionAnalysisService {
 
     // 감정 분석 결과 조회 (감정 리스트 반환)
     public EmotionAnalysisResultDto getEmotionAnalysisResult(Long diaryId) {
-        DiaryRecord diaryRecord = diaryRecordRepository.findWithEmotionsById(diaryId)
+        DiaryRecord diaryRecord = diaryRecordRepository.findByDiaryRecordId(diaryId)
             .orElseThrow(() -> new EntityNotFoundException("DiaryRecord not found"));
 
         List<EmotionDto> emotionDtos = new ArrayList<>();
