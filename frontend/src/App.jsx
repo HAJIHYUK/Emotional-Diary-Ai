@@ -4,7 +4,6 @@ import DiaryList from './pages/DiaryList';
 import DiaryWrite from './pages/DiaryWrite';
 import DiaryDetail from './pages/DiaryDetail';
 import EmotionStats from './pages/EmotionStats';
-import Recommendations from './pages/Recommendations';
 import Settings from './pages/Settings';
 import UserPreferences from './pages/UserPreferences';
 import UserOnboarding from './pages/UserOnboarding';
@@ -37,7 +36,6 @@ function AppLayout() {
               <Route path="/edit/:id" element={<DiaryWrite />} />
               <Route path="/diary/:id" element={<DiaryDetail />} />
               <Route path="/stats" element={<EmotionStats />} />
-              <Route path="/recommendations" element={<Recommendations />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/preferences" element={<UserPreferences />} />
               <Route path="/onboarding" element={<UserOnboarding />} />

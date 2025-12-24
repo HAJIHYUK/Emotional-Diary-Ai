@@ -22,10 +22,6 @@ function Sidebar() {
           <FaChartBar className="nav-icon" />
           감정 통계
         </NavLink>
-        <NavLink to="/recommendations">
-          <FaLightbulb className="nav-icon" />
-          추천
-        </NavLink>
         <NavLink to="/settings">
           <FaCog className="nav-icon" />
           설정
