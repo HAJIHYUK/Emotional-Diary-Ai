@@ -11,7 +11,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;// 비동기 어노테이션
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -65,20 +67,23 @@ public class AiEmotionAnalysisService {
 
     /**
      * 감정 분석 및 추천 생성을 총괄하는 메서드
-     * API 호출과 DB 트랜잭션을 분리하여 처리
+     * [Refactoring] 비동기 처리(Async)로 변경하여 Non-blocking 실행
+     * - 메인 스레드는 즉시 반환되며, 분석 로직은 별도 스레드에서 수행됨
      * @param userId 유저 ID
      * @param diaryId 일기 ID
-     * @return 감정 분석 결과 DTO
-     * @throws JsonProcessingException JSON 파싱 예외
      */
-    public EmotionAnalysisResultDto analyzeEmotionAndRecommend(Long userId, Long diaryId) throws JsonProcessingException {
-        // 1. 감정 분석
-        EmotionAnalysisResultDto emotionAnalysisResult = analyzeAndSaveEmotions(userId, diaryId);
+    @Async
+    @Transactional(propagation = Propagation.NOT_SUPPORTED) //DB 트랜잭션 없이 시작 (Read-only 에러 방지)
+    public void analyzeEmotionAndRecommend(Long userId, Long diaryId) {
+        try {
+            // 1. 감정 분석
+            EmotionAnalysisResultDto emotionAnalysisResult = analyzeAndSaveEmotions(userId, diaryId);
 
-        // 2. 추천 생성 및 저장
-        generateAndSaveRecommendations(userId, diaryId, emotionAnalysisResult.getEmotions());
-
-        return emotionAnalysisResult;
+            // 2. 추천 생성 및 저장
+            generateAndSaveRecommendations(userId, diaryId, emotionAnalysisResult.getEmotions());
+        } catch (Exception e) {
+            log.error("[Async Error] 비동기 분석 처리 중 예외 발생 (userId={}, diaryId={})", userId, diaryId, e);
+        }
     }
 
     /**

@@ -8,7 +8,9 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.EnableAsync;
 
+@EnableAsync // 비동기 처리 활성화
 @EnableScheduling //스케줄링 기능 활성화
 @SpringBootApplication
 public class Application {
