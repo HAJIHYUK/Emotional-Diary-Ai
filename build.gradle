@@ -111,6 +111,11 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    // 테스트 결과를 터미널에서 보기 위한 설정
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = true
+    }
 }
 
 // WAR 파일 이름 설정
