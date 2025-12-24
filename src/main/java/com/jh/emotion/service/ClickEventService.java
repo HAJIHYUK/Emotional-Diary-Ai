@@ -30,7 +30,15 @@ public class ClickEventService {
     private final RecommendationRepository recommendationRepository;
     private final UserPreferenceRepository userPreferenceRepository;
 
-    //userId를 파라미터로 직접 받도록 변경
+    
+    /**
+     * 사용자 클릭 이벤트를 저장하고 관련 선호도 점수를 업데이트
+     * - 동일한 추천에 대한 중복 클릭(하루 기준)을 방지
+     * - 클릭 이벤트 저장 후 사용자 선호도 사용 횟수 증가 로직 호출
+     * 
+     * @param userClickEventDto 클릭 이벤트 정보 (추천 ID, 타입, 제목, 장르)
+     * @param userId 이벤트를 발생시킨 사용자 ID
+     */
     @Transactional(readOnly = false)
     public void saveUserClickEvent(UserClickEventDto userClickEventDto, Long userId) {
         User user = userRepository.findById(userId)
@@ -47,7 +55,7 @@ public class ClickEventService {
         LocalDateTime startOfDay = java.time.LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = java.time.LocalDate.now().atTime(java.time.LocalTime.MAX);
         
-        //오늘 이미 클릭한 추천인지 확인 (중복 방지)
+        //오늘 이미 클릭한 추천인지 확인 (중복 방지) 
         if (userClickEventRepository.existsByUser_UserIdAndRecommendation_RecommendationIdAndCreatedAtBetween(userId, recId, startOfDay, endOfDay)) {
             log.info("[ClickEvent] 이미 오늘 클릭한 추천입니다. 저장을 건너뜁니다. (userId={}, recId={})", userId, recId);
             return;
@@ -70,6 +78,13 @@ public class ClickEventService {
     }
 
 
+    /**
+     * 클릭된 콘텐츠와 매칭되는 사용자 선호도(취향)의 사용 횟수를 증가
+     * - 유효한 카테고리 및 장르인 경우에만 카운트 업데이트
+     * 
+     * @param userClickEventDto 클릭 이벤트 정보
+     * @param userId 사용자 ID
+     */
     private void updateUserPreferenceUsage(UserClickEventDto userClickEventDto, Long userId) {
         if (userClickEventDto.getGenre() == null || userClickEventDto.getGenre().isEmpty()) {
             return; // 취향에 장르가 없으면 업데이트 X 
@@ -79,7 +94,7 @@ public class ClickEventService {
             PreferenceCategory category = PreferenceCategory.valueOf(userClickEventDto.getType());
             
             userPreferenceRepository.findByUser_UserIdAndCategoryAndGenreAndIsActiveTrue(
-                userId, // DTO 대신 파라미터로 받은 userId 사용
+                userId, 
                 category,
                 userClickEventDto.getGenre()
             ).ifPresent(preference -> {
