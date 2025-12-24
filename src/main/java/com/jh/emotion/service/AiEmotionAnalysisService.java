@@ -50,41 +50,30 @@ public class AiEmotionAnalysisService {
     private final CachingService cachingService;
     private final RecommendationService recommendationService; 
     private final EmotionDailyStatRepository emotionDailyStatRepository;
-    
+    private final org.springframework.transaction.support.TransactionTemplate transactionTemplate;
 
-    // 추천 생성용 모델 URL (2.5 Flash로 수정)
+    // 추천 생성용 모델 URL 2.5 Flash
     private static final String GEMINI_FLASH_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent";
-    // 감정 분석용 모델 URL (2.5 Flash-Lite로 수정)
+    // 감정 분석용 모델 URL 2.5 Flash-Lite
     private static final String GEMINI_FLASH_LITE_API_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent";
     
     @Value("${gemini.api.key}")
     private String apiKey;
     
-    private final WebClient webClient; // [수정]
+    private final WebClient webClient;
     private final ObjectMapper objectMapper;
 
     /**
      * 감정 분석 및 추천 생성을 총괄하는 메서드
+     * API 호출과 DB 트랜잭션을 분리하여 처리
      * @param userId 유저 ID
      * @param diaryId 일기 ID
      * @return 감정 분석 결과 DTO
      * @throws JsonProcessingException JSON 파싱 예외
      */
-    @Transactional
     public EmotionAnalysisResultDto analyzeEmotionAndRecommend(Long userId, Long diaryId) throws JsonProcessingException {
         // 1. 감정 분석
         EmotionAnalysisResultDto emotionAnalysisResult = analyzeAndSaveEmotions(userId, diaryId);
-
-        // // --- [추가] API 연속 호출 방지를 위한 지연 시간 ---
-        // try {
-        //     // 5초간 대기
-        //     log.info("Gemini API 연속 호출 방지를 위해 5초간 대기합니다...");
-        //     Thread.sleep(5000); 
-        // } catch (InterruptedException e) {
-        //     Thread.currentThread().interrupt();
-        //     log.error("API 호출 지연 중 스레드 인터럽트 발생", e);
-        // }
-        // // --- [추가 끝] ---
 
         // 2. 추천 생성 및 저장
         generateAndSaveRecommendations(userId, diaryId, emotionAnalysisResult.getEmotions());
@@ -102,9 +91,9 @@ public class AiEmotionAnalysisService {
      * @return 감정 분석 결과 DTO
      * @throws JsonProcessingException JSON 파싱 예외
      */
-    @Transactional
     public EmotionAnalysisResultDto analyzeAndSaveEmotions(Long userId, Long diaryId) throws JsonProcessingException {
         log.info("==================== AI 분석 시작 (Diary ID: {}) ====================", diaryId);
+        
         DiaryRecord diaryRecord = diaryRecordRepository.findById(diaryId)
             .orElseThrow(() -> new EntityNotFoundException("DiaryRecord not found"));
         String text = diaryRecord.getContent();
@@ -118,19 +107,22 @@ public class AiEmotionAnalysisService {
             String hash = HashService.generateContentHash(text);
             log.info("[AI 분석 STEP 1/3] L1 캐시 히트! 캐시된 결과를 사용합니다.");
             log.info("==================== AI 분석 종료 (Diary ID: {}) ====================", diaryId);
-            return saveEmotionAnalysisResult(diaryId, emotionResultNode, hash);
+            
+            // 캐시된 결과 저장 (저장 시점에만 트랜잭션 적용)
+            return transactionTemplate.execute(status -> 
+                saveEmotionAnalysisResult(diaryId, emotionResultNode, hash)
+            );
         }
         log.info("[AI 분석 STEP 1/3] L1 캐시 미스. 다음 단계로 진행합니다.");
 
         // 2. L2 캐시 (DB contentHash) 조회
         log.info("[AI 분석 STEP 2/3] L2 캐시(DB contentHash) 조회를 시작합니다.");
         String hash = HashService.generateContentHash(text);
-        // 자기 자신을 제외하고 동일한 해시를 가진 다른 레코드를 찾도록 수정
         Optional<DiaryRecord> existingDiaryRecordOpt = diaryRecordRepository.findTopByContentHashAndDiaryRecordIdNotOrderByCreatedAtDesc(hash, diaryId);
 
-        if (existingDiaryRecordOpt.isPresent()) { // 존재시 에만 캐시에 저장!
+        if (existingDiaryRecordOpt.isPresent()) { 
             DiaryRecord existingRecord = existingDiaryRecordOpt.get();
-            ObjectNode resultNode = objectMapper.createObjectNode(); // 추후 DTO (POJO)로 변경 해보기
+            ObjectNode resultNode = objectMapper.createObjectNode(); 
             ArrayNode emotionsNode = resultNode.putArray("emotions");
             for (Emotion e : existingRecord.getEmotions()) {
                 ObjectNode emotionNode = emotionsNode.addObject();
@@ -146,20 +138,30 @@ public class AiEmotionAnalysisService {
             cachingService.setCachedResult(text, objectMapper.writeValueAsString(resultNode));
             log.info("[AI 분석 STEP 2/3] L2 캐시 히트! DB에서 가져온 결과를 사용하고 L1 캐시에 저장합니다.");
             log.info("==================== AI 분석 종료 (Diary ID: {}) ====================", diaryId);
-            // 새로운 다이어리에 결과 저장 (해시는 저장할 필요 없음, 이미 동일 콘텐츠 존재)
-            return saveEmotionAnalysisResult(diaryId, resultNode, hash);
+            
+            // 결과 저장 (저장 시점에만 트랜잭션 적용)
+            return transactionTemplate.execute(status -> 
+                saveEmotionAnalysisResult(diaryId, resultNode, hash)
+            );
         }
         log.info("[AI 분석 STEP 2/3] L2 캐시 미스. 다음 단계로 진행합니다.");
         
         // 3. API 호출하여 감정 분석
         log.info("[AI 분석 STEP 3/3] 캐시 미스. Gemini API 호출을 시작합니다.");
+        
+        // [Transaction 분리] 외부 API 호출은 트랜잭션 없이 수행하여 DB 커넥션 점유 방지
         JsonNode emotionResultNode = callGeminiForEmotionAnalysis(text);
+        
         log.info("[AI 분석 STEP 3/3] Gemini API 호출 성공. 결과를 L1 캐시에 저장합니다.");
         cachingService.setCachedResult(text, objectMapper.writeValueAsString(emotionResultNode)); 
 
         // 감정 분석 결과 및 해시 저장
         log.info("==================== AI 분석 종료 (Diary ID: {}) ====================", diaryId);
-        return saveEmotionAnalysisResult(diaryId, emotionResultNode, hash);
+        
+        // [Transaction 분리] DB 저장 시점에만 TransactionTemplate을 사용하여 트랜잭션 범위를 최소화
+        return transactionTemplate.execute(status -> 
+            saveEmotionAnalysisResult(diaryId, emotionResultNode, hash)
+        );
     }
     
     /**
@@ -227,12 +229,7 @@ public class AiEmotionAnalysisService {
 
     /**
      * 분석된 감정을 기반으로 추천을 생성하고 저장하는 메서드
-     * @param userId 유저 ID
-     * @param diaryId 일기 ID
-     * @param emotions 감정 DTO 리스트
-     * @throws JsonProcessingException JSON 파싱 예외
      */
-    @Transactional
     public void generateAndSaveRecommendations(Long userId, Long diaryId, List<EmotionDto> emotions) throws JsonProcessingException {
         log.info("==================== 추천 생성 시작 (Diary ID: {}) ====================", diaryId);
         log.info("[추천 STEP 1/4] 사용자 정보 및 선호도 조회 시작. User ID: {}", userId);
@@ -264,7 +261,12 @@ public class AiEmotionAnalysisService {
 
         // 추천 정보 저장 (RecommendationService에 위임)
         log.info("[추천 STEP 4/4] 수신된 추천 결과를 DB에 저장합니다.");
-        recommendationService.saveRecommendations(diaryId, recommendationResultNode);
+        
+        transactionTemplate.execute(status -> {
+            recommendationService.saveRecommendations(diaryId, recommendationResultNode);
+            return null;
+        });
+        
         log.info("==================== 추천 생성 및 저장 완료 (Diary ID: {}) ====================", diaryId);
     }
 
@@ -367,8 +369,6 @@ public class AiEmotionAnalysisService {
     }
 
 
-    //최근 20개 추천 정보 조회 (중복 제거) -> RecommendationService로 이동
-    // public List<String> getRecentRecommendations(Long userId) { ... }
     
 
     /**
