@@ -4,6 +4,8 @@ import { RiKakaoTalkFill } from 'react-icons/ri';
 import styles from './Login.module.css';
 
 function Login() {
+//  const KAKAO_JAVASCRIPT_KEY = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY;                                                                                              │
+// │const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI; 
     // [배포 수정] 환경변수 대신 하드코딩 (빌드 문제 해결용)
     const KAKAO_JAVASCRIPT_KEY = '4b4f2c67b097ab92e7c26510b13baa70'; // JavaScript 키
     const KAKAO_REDIRECT_URI = 'http://3.39.187.53:8080/auth/kakao/callback'; // 서버 IP 주소

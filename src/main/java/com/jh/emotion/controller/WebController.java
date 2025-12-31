@@ -14,10 +14,12 @@ public class WebController {
         "/", 
         "/login", 
         "/onboarding", 
+        "/onboarding-flow",
         "/diary/**", 
         "/write", 
         "/edit/**", 
-        "/settings",
+        "/stats",
+        "/settings/**",
         "/auth/**"
     })
     public String forward() {
