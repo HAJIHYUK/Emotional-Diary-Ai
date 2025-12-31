@@ -129,3 +129,52 @@ dependencyManagement {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
     }
 }
+
+// ==========================================
+// [React + Spring Boot 통합 빌드 스크립트]
+// 언어: Groovy (Gradle 설정용 언어)
+// 역할: ./gradlew build 실행 시 프론트엔드도 자동으로 빌드해서 합쳐줌
+// ==========================================
+
+def frontendDir = "$projectDir/frontend"
+def sourceBuildDir = "$frontendDir/dist"
+def javaResourceDir = "$projectDir/src/main/resources/static"
+
+// 1. 프론트엔드 라이브러리 설치 (npm install)
+task installReact(type: Exec) {
+    workingDir "$frontendDir"
+    inputs.dir "$frontendDir"
+    group = BasePlugin.BUILD_GROUP
+    if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+        commandLine "npm.cmd", "audit", "fix"
+        commandLine 'npm.cmd', 'install'
+    } else {
+        commandLine "npm", "audit", "fix"
+        commandLine 'npm', 'install'
+    }
+}
+
+// 2. 프론트엔드 빌드 (npm run build)
+task buildReact(type: Exec) {
+    dependsOn "installReact"
+    workingDir "$frontendDir"
+    inputs.dir "$frontendDir"
+    group = BasePlugin.BUILD_GROUP
+    if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+        commandLine "npm.cmd", "run-script", "build"
+    } else {
+        commandLine "npm", "run-script", "build"
+    }
+}
+
+// 3. 빌드된 결과물을 스프링 정적 리소스 폴더로 복사
+task copyReactBuildFiles(type: Copy) {
+    dependsOn "buildReact"
+    from "$sourceBuildDir"
+    into "$javaResourceDir"
+}
+
+// 4. 스프링 빌드 과정(processResources) 실행 전에 위 작업들을 먼저 수행하도록 연결
+processResources {
+    dependsOn "copyReactBuildFiles"
+}

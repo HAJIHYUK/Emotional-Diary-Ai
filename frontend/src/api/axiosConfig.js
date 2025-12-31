@@ -1,11 +1,11 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080',
+    baseURL: '', //  'http://localhost:8080' - > 배포를 위해 상대 경로로 바꿈 
     withCredentials: true,
 });
 
-// --- 요청 인터셉터 (기존 코드) ---
+// --- 요청 인터셉터 ---
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('jwt');
