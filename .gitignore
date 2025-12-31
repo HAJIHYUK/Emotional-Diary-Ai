@@ -40,3 +40,4 @@ out/
 /src/main/resources/application.properties
 GEMINI.md.DS_Store
 Thumbs.db
+/src/main/resources/application-secretServer.properties
