@@ -204,12 +204,90 @@ body {
 }
 
 /* --- Onboarding Flow Styles --- */
-.onboarding-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100vh;
-  background-color: var(--background-color);
-  overflow-y: auto; /* 내용이 길어질 경우 스크롤 */
+/* --- Responsive Design (Mobile & Tablet) --- */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column; 
+  }
+
+  .sidebar {
+    position: fixed; /* 하단 고정 */
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70px; /* 고정 높이 */
+    padding: 0.5rem 0;
+    background-color: var(--component-bg-color);
+    border-right: none;
+    border-top: 1px solid var(--border-color); /* 위쪽 테두리 */
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); /* 위쪽 그림자 */
+    z-index: 1000;
+    
+    flex-direction: row; 
+    gap: 0;
+    align-items: center;
+  }
+
+  .sidebar-header {
+    display: none; 
+  }
+
+  .sidebar-nav {
+    display: flex;
+    width: 100%;
+    justify-content: space-around; /* 아이콘 균등 분할 */
+    margin: 0;
+  }
+
+  .sidebar-nav a {
+    flex-direction: column;
+    font-size: 0.7rem; /* 글자 크기 축소 */
+    padding: 0.2rem;
+    margin-bottom: 0;
+    text-align: center;
+    border-radius: 0;
+    background: none !important; /* 배경 제거 */
+    box-shadow: none !important;
+    color: var(--text-light-color);
+  }
+
+  .sidebar-nav a.active {
+    color: var(--sidebar-header-color) !important; /* 활성 상태 색상만 변경 */
+  }
+
+  .sidebar-nav a:hover {
+    transform: none; /* 모바일 호버 효과 제거 */
+  }
+
+  .sidebar-nav a .nav-icon {
+    margin-right: 0;
+    margin-bottom: 2px;
+    font-size: 1.4rem; /* 아이콘 강조 */
+  }
+
+  .content-area {
+    padding: 1rem; 
+    padding-bottom: 80px; /* 하단 메뉴 공간 확보 */
+  }
+
+  /* 카드 및 폰트 크기 조정 */
+  .card-body {
+    padding: 1.2rem !important;
+  }
+
+  h1 {
+    font-size: 1.4rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .ai-comment-quote {
+    font-size: 0.95rem;
+    padding: 1rem;
+  }
+
+  /* 유튜브 영상 모바일 최적화 */
+  .video-preview-container {
+    width: 100%; 
+    padding-top: 56.25%; 
+  }
 }

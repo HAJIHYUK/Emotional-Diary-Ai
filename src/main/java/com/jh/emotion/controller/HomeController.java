@@ -3,7 +3,7 @@
 // import org.springframework.stereotype.Controller;
 // import org.springframework.web.bind.annotation.GetMapping;
 
-// @Controller // jsp 로 개발할때 사용하던 컨트롤러  
+// @Controller // jsp 로 개발할때 사용하던 컨트롤러 
 // public class HomeController {
 
 //     @GetMapping("/")

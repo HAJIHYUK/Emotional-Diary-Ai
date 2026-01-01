@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: '', //  'http://localhost:8080' - > 배포를 위해 상대 경로로 바꿈 
+    baseURL: '', //  'http://localhost:8080' - > ' '  배포를 위해 상대 경로로 바꿈 
     withCredentials: true,
 });
 
