@@ -293,21 +293,50 @@ body {
 
   /* --- [모바일] 일기 목록(DiaryList) 수정 --- */
   
-  /* 정렬 버튼 가로 배치 강제 */
+  /* 정렬 버튼 영역 */
   .d-flex.justify-content-end.mb-3 {
-    justify-content: space-between !important;
-    width: 100%;
+    flex-direction: column; /* 전체 영역 세로 배치 */
+    align-items: flex-end; /* 오른쪽 정렬 */
   }
   
   .btn-group {
-    width: 100%;
+    width: 100%; /* 너비 꽉 차게 */
     display: flex;
+    flex-direction: column; /* 버튼들을 위아래로 쌓음 (ㅡ ㅡ 형태) */
+    gap: 0.5rem; /* 버튼 사이 간격 */
   }
   
   .btn-group .btn {
-    flex: 1; /* 버튼 너비 균등 분할 */
-    font-size: 0.9rem;
-    padding: 0.5rem;
+    width: 100%; /* 버튼 너비 100% */
+    border-radius: var(--border-radius-md) !important; /* 그룹이어도 둥글게 */
+    margin: 0 !important;
+  }
+
+  /* --- [모바일] 상세 페이지(DiaryDetail) 버튼 수정 --- */
+  
+  /* 버튼들이 있는 헤더 영역 */
+  .row.align-items-center.mb-4 {
+    flex-direction: column;
+    align-items: flex-start !important; /* 왼쪽 정렬 */
+    gap: 1rem;
+  }
+  
+  /* 버튼 그룹 (AI 분석, 수정, 목록 등) */
+  .col-auto.d-flex.gap-2 {
+    width: 100%;
+    flex-direction: column; /* 버튼 세로로 쌓기 */
+    gap: 0.5rem !important;
+  }
+  
+  /* 모든 버튼 공통 수정 (모바일) */
+  .btn {
+    width: 100%; /* 가로 꽉 차게 */
+    font-size: 0.95rem !important; /* 글자 크기 적당히 */
+    padding: 0.6rem 0 !important; /* 위아래 여백 */
+    white-space: nowrap !important; /* 줄바꿈 절대 금지 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   /* 테이블을 카드 리스트처럼 변형 (스크롤 없애기) */

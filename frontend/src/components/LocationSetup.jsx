@@ -74,7 +74,7 @@ function LocationSetup({ onSave, onSkip, showSkipButton = true }) {
           <InputGroup>
             <Form.Control
               type="text"
-              placeholder="오른쪽 '주소 검색' 버튼을 눌러주세요."
+              placeholder="'주소 검색' 버튼을 눌러주세요."
               value={displayAddress} // 화면에는 전체 주소 표시
               readOnly
               disabled={loading}
