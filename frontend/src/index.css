@@ -295,48 +295,70 @@ body {
   
   /* 정렬 버튼 영역 */
   .d-flex.justify-content-end.mb-3 {
-    flex-direction: column; /* 전체 영역 세로 배치 */
-    align-items: flex-end; /* 오른쪽 정렬 */
+    flex-direction: column;
+    align-items: stretch; /* 좌우 꽉 차게 */
   }
   
   .btn-group {
-    width: 100%; /* 너비 꽉 차게 */
     display: flex;
-    flex-direction: column; /* 버튼들을 위아래로 쌓음 (ㅡ ㅡ 형태) */
-    gap: 0.5rem; /* 버튼 사이 간격 */
+    flex-direction: row; /* 다시 가로 배치 (반반이 더 예쁨) */
+    gap: 10px; /* 버튼 사이 간격 */
+    width: 100%;
   }
   
   .btn-group .btn {
-    width: 100%; /* 버튼 너비 100% */
-    border-radius: var(--border-radius-md) !important; /* 그룹이어도 둥글게 */
+    flex: 1; /* 정확히 반반 (50%) */
+    border: 1px solid var(--primary-color) !important; /* 테두리 추가 */
+    border-radius: var(--border-radius-md) !important;
+    background-color: white;
+    color: var(--text-color);
+    font-weight: bold;
     margin: 0 !important;
+  }
+
+  /* 선택된 버튼 스타일 (Bootstrap active 클래스 대응) */
+  .btn-group .btn.active, 
+  .btn-group .btn:active,
+  .btn-group .btn:focus {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
   }
 
   /* --- [모바일] 상세 페이지(DiaryDetail) 버튼 수정 --- */
   
-  /* 버튼들이 있는 헤더 영역 */
-  .row.align-items-center.mb-4 {
-    flex-direction: column;
-    align-items: flex-start !important; /* 왼쪽 정렬 */
-    gap: 1rem;
-  }
-  
-  /* 버튼 그룹 (AI 분석, 수정, 목록 등) */
+  /* 버튼 그룹 컨테이너 */
   .col-auto.d-flex.gap-2 {
     width: 100%;
-    flex-direction: column; /* 버튼 세로로 쌓기 */
-    gap: 0.5rem !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr; /* 2열 그리드 */
+    gap: 10px !important;
   }
   
-  /* 모든 버튼 공통 수정 (모바일) */
+  /* 첫 번째 버튼 (AI 분석하기)은 혼자 한 줄 다 쓰게 */
+  /* 주의: 버튼 순서가 [AI, 수정, 목록, 삭제] 순서임 */
+  /* AI 버튼이 있을 때만 적용되도록 nth-child 사용 */
+  
+  /* AI 버튼 (첫 번째) -> 가로 꽉 차게 */
+  .col-auto.d-flex.gap-2 > button:first-child:nth-last-child(4), /* 분석,수정,목록,삭제 4개일 때 */
+  .col-auto.d-flex.gap-2 > button:first-child:nth-last-child(3) { /* 분석 중,수정,목록 3개일 때 등 */
+     grid-column: 1 / -1; 
+  }
+
   .btn {
-    width: 100%; /* 가로 꽉 차게 */
-    font-size: 0.95rem !important; /* 글자 크기 적당히 */
-    padding: 0.6rem 0 !important; /* 위아래 여백 */
-    white-space: nowrap !important; /* 줄바꿈 절대 금지 */
+    width: 100%;
+    font-size: 0.95rem !important;
+    padding: 0.7rem 0 !important;
+    white-space: nowrap !important;
     display: flex;
     justify-content: center;
     align-items: center;
+    box-shadow: var(--shadow-light); /* 입체감 추가 */
+  }
+
+  /* 삭제 버튼은 빨간색 테두리로 경고 느낌 */
+  .btn-danger {
+    border: 1px solid #dc3545 !important;
   }
 
   /* 테이블을 카드 리스트처럼 변형 (스크롤 없애기) */
