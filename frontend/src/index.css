@@ -372,6 +372,28 @@ body {
     border: 1px solid #dc3545 !important;
   }
 
+  /* --- [모바일] 주제 추천(TopicSuggester) 수정 --- */
+  
+  /* 버튼들을 담고 있는 Stack 영역 */
+  .card.bg-light.border-0 .hstack.flex-wrap {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr; /* 2열 격자 */
+    gap: 8px !important;
+  }
+  
+  .card.bg-light.border-0 .hstack.flex-wrap .btn {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0.5rem 0 !important;
+    font-size: 0.85rem !important;
+  }
+  
+  /* 랜덤 추천 버튼만 100% (마지막 버튼) */
+  .card.bg-light.border-0 .hstack.flex-wrap .btn:last-child {
+    grid-column: 1 / -1; 
+    margin-top: 4px !important;
+  }
+
   /* 테이블을 카드 리스트처럼 변형 (스크롤 없애기) */
   .table-responsive {
     border: none;

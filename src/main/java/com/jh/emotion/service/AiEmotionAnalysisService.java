@@ -76,11 +76,11 @@ public class AiEmotionAnalysisService {
     @Transactional(propagation = Propagation.NOT_SUPPORTED) //DB 트랜잭션 없이 시작 (Read-only 에러 방지)
     public void analyzeEmotionAndRecommend(Long userId, Long diaryId) {
         try {
-            // 1. 감정 분석
+            // 1. 감정 분석 및 저장
             EmotionAnalysisResultDto emotionAnalysisResult = analyzeAndSaveEmotions(userId, diaryId);
 
-            // 2. 추천 생성 및 저장
-            generateAndSaveRecommendations(userId, diaryId, emotionAnalysisResult.getEmotions());
+            // 2. 추천 생성 및 저장 (키워드 활용을 위해 전체 결과 전달)
+            generateAndSaveRecommendations(userId, diaryId, emotionAnalysisResult);
         } catch (Exception e) {
             log.error("[Async Error] 비동기 분석 처리 중 예외 발생 (userId={}, diaryId={})", userId, diaryId, e);
         }
@@ -138,6 +138,15 @@ public class AiEmotionAnalysisService {
                 emotionNode.put("ratio", e.getRatio());
             }
             resultNode.put("comment", existingRecord.getAiComment());
+            
+            //저장된 키워드 불러오기 (L2 캐시 히트 시)
+            if (existingRecord.getKeywords() != null && !existingRecord.getKeywords().isEmpty()) {
+                ArrayNode keywordsNode = resultNode.putArray("keywords");
+                String[] keywords = existingRecord.getKeywords().split(", ");
+                for (String k : keywords) {
+                    keywordsNode.add(k);
+                }
+            }
 
             // L1 캐시에 저장
             cachingService.setCachedResult(text, objectMapper.writeValueAsString(resultNode));
@@ -189,9 +198,10 @@ public class AiEmotionAnalysisService {
         ObjectNode textPart = partsArray.addObject();
                 textPart.put("text",
                     "꼭 자세하고 성실하고 정확하게 분석해줘."+ 
-                    "text의 감정을 분석하고 감정은 여러개(1~5개)일 수 있어 감정은 기쁨,슬픔,분노,불안,놀람,역겨움,중립이 있고 감정level:0~10 confidence:0.0~1.0은 너의 분석신뢰도 이고 ratio은 감정 비율맞춰서 분석해." 
+                    "text의 감정을 분석하고 감정은 여러개(1~5개)일 수 있어 감정은 기쁨,슬픔,분노,불안,놀람,역겨움,중립이 있고 감정level:0~10 confidence:0.0~1.0은 너의 분석신뢰도 이고 ratio은 감정 비율맞춰서 분석해." +
+                    "또한, 일기 내용에서 추천 검색어에 사용할 만한 구체적인 핵심 키워드(음식명, 장소명, 활동명 등)를 1~3개 추출해서 'keywords' 필드에 배열로 담아줘. (예: ['두바이 쫀득 쿠키', '베이킹', '카페']) " 
                     + "반드시 아래 JSON 형식으로만 응답해. 다른 설명이나 텍스트는 절대 포함하지 마. comment 필드는 필수적으로 포함해야 해.\n" 
-                    + "JSON형식:{emotions:[{label,level,confidence,description,ratio}], comment:\"일기에 대한 긍정적이고 따뜻한 코멘트 한 문장 작성.\"} " + "text:" + text
+                    + "JSON형식:{emotions:[{label,level,confidence,description,ratio}], keywords:[\"키워드1\", \"키워드2\"], comment:\"일기에 대한 긍정적이고 따뜻한 코멘트 한 문장 작성.\"} " + "text:" + text
                 );
         
                 ObjectNode generationConfig = requestBody.putObject("generationConfig");
@@ -235,7 +245,10 @@ public class AiEmotionAnalysisService {
     /**
      * 분석된 감정을 기반으로 추천을 생성하고 저장하는 메서드
      */
-    public void generateAndSaveRecommendations(Long userId, Long diaryId, List<EmotionDto> emotions) throws JsonProcessingException {
+    public void generateAndSaveRecommendations(Long userId, Long diaryId, EmotionAnalysisResultDto analysisResult) throws JsonProcessingException {
+        List<EmotionDto> emotions = analysisResult.getEmotions();
+        List<String> keywords = analysisResult.getKeywords(); // 키워드 추출
+
         log.info("==================== 추천 생성 시작 (Diary ID: {}) ====================", diaryId);
         log.info("[추천 STEP 1/4] 사용자 정보 및 선호도 조회 시작. User ID: {}", userId);
         User user = userRepository.findById(userId)
@@ -250,7 +263,7 @@ public class AiEmotionAnalysisService {
                 userPreference += pf.getCategory().toString() + ":" + pf.getGenre() + ", ";
             }
         }
-        log.info("[추천 STEP 1/4] 사용자 위치: {}, 선호도: {}", userLocation, userPreference);
+        log.info("[추천 STEP 1/4] 사용자 위치: {}, 선호도: {}, 키워드: {}", userLocation, userPreference, keywords);
 
         // 최근 20개 추천 정보 제외용 타이틀 생성 (RecommendationService에 위임)
         log.info("[추천 STEP 2/4] 최근 추천 제외 목록 조회 시작.");
@@ -258,13 +271,14 @@ public class AiEmotionAnalysisService {
         String excludeRecommendationTitle = String.join(",", recentRecommendations);
         log.info("[추천 STEP 2/4] 제외할 추천 목록 ({}개): {}", recentRecommendations.size(), excludeRecommendationTitle);
 
-        // Gemini API 호출하여 추천 생성
+        // Gemini API 호출하여 추천 생성 (트랜잭션 없이 수행 - DB 점유 X)
         log.info("[추천 STEP 3/4] Gemini API 호출하여 추천 생성을 시작합니다.");
-        JsonNode recommendationResultNode = callGeminiForRecommendations(emotions, userPreference, userLocation, excludeRecommendationTitle);
+        //키워드 전달
+        JsonNode recommendationResultNode = callGeminiForRecommendations(emotions, keywords, userPreference, userLocation, excludeRecommendationTitle);
         log.info("[추천 STEP 3/4] Gemini API로부터 추천 결과 수신 완료. 결과: {}", recommendationResultNode.toString());
 
 
-        // 추천 정보 저장 (RecommendationService에 위임)
+        // 추천 정보 저장 (RecommendationService에 위임) - 여기서 트랜잭션 시작
         log.info("[추천 STEP 4/4] 수신된 추천 결과를 DB에 저장합니다.");
         
         transactionTemplate.execute(status -> {
@@ -278,13 +292,14 @@ public class AiEmotionAnalysisService {
     /**
      * Gemini API를 호출하여 콘텐츠를 추천하는 메서드
      * @param emotions 감정 DTO 리스트
+     * @param keywords 일기 핵심 키워드 리스트
      * @param userPreference 유저 선호도 문자열
      * @param userLocation 유저 위치 문자열
      * @param excludeRecommendationTitle 제외할 추천 제목 문자열
      * @return 추천 결과 JsonNode
      * @throws JsonProcessingException JSON 파싱 예외
      */
-    private JsonNode callGeminiForRecommendations(List<EmotionDto> emotions, String userPreference, String userLocation, String excludeRecommendationTitle) throws JsonProcessingException {
+    private JsonNode callGeminiForRecommendations(List<EmotionDto> emotions, List<String> keywords, String userPreference, String userLocation, String excludeRecommendationTitle) throws JsonProcessingException {
         log.info("[Gemini API Call] 추천 생성 API 호출 시작.");
         String url = UriComponentsBuilder.fromHttpUrl(GEMINI_FLASH_API_URL)
                 .queryParam("key", apiKey)
@@ -307,11 +322,15 @@ public class AiEmotionAnalysisService {
             }
         }
         String emotionString = emotionStringBuilder.length() > 0 ? emotionStringBuilder.toString() : "N/A";
+        
+        // 키워드 문자열 변환
+        String keywordString = (keywords != null && !keywords.isEmpty()) ? String.join(", ", keywords) : "없음";
 
-        String prompt = "분석된 감정을 기반으로, 유저 위치와 유저 취향 정보를 참고해서 " +
-            "취향에 맞는 3~6개, 취향 외의 것 2~4개를 추천해줘." +
+        String prompt = "분석된 감정과 '일기 키워드'를 기반으로, 유저 위치와 유저 취향 정보를 참고해서 " +
+            "취향에 맞는 3~6개, 취향 외의 것 1~3개를 추천해줘." +
+            "특히 '일기 키워드'가 들어간 콘텐츠(레시피, 영상, 장소 등)를 우선적으로 추천해줘." +
             "추천 정보는 꼭!! 최근 20개 추천 정보 제외 추천 정보를 추천해줘." +
-            "최근20개:"+ excludeRecommendationTitle + // 최근 20개 추천 정보 제외
+            "최근20개:"+ excludeRecommendationTitle + 
             "아래와 같이 카테고리별로 추천 기준을 반드시 지켜줘 대분류 소분류는 무조건 영어야!!:\n" +
             "type(대분류)기준:MOVIE, MUSIC, CAFE, RESTAURANT, FOOD, YOUTUBE, ENTERTAINMENT, PLACE, WALKING_TRAIL, ACTIVITY, non_matching_preferences 꼭 영어로만 보내줘 \n" +
             "genre(소분류)기준:ACTION, TERRACE, DESSER시 '공원 산책로', '호수공원 산책로', '숲속 둘레길', '실내 클라이밍'처럼 장소의 **간단한 특징이나 종류, 활동의 구체적인 유형(실제 검색 가능한 키워드)만** 추천해줘. '도심 속', '아늑한', '자연과 함께하는' 등 불필요한 수식어나 추상적 표현은 절대 넣지 마. 위치(도시/동네 등)는 내부적으로만 참고하고, 추천 title, reason 등 모든 응답에 지역명(도시/동네 등)은 절대 포함하지 마.단 WALKING_TRAIL 분류 호출은 지역기반으로 정확한 공원명이나 장소명을 알려줘 \n" +
@@ -322,7 +341,7 @@ public class AiEmotionAnalysisService {
             "- PLACE, WALKING_TRAIL, ACTIVITY: 반드 추천해.\n" +
             "반드시 아래 JSON 형식으로만 응답해. 다른 설명이나 텍스트는 절대 포함하지 마.\n" +
             "JSON형식:{recommendations:{matching_preferences:[{type, genre, title, reason}], non_matching_preferences:[{type, genre, title, reason}]}} " +
-            "분석된감정:" + emotionString + " 유저선호취향:" + userPreference + " 유저위치:" + userLocation;
+            "분석된감정:" + emotionString + " 일기 키워드:" + keywordString + " 유저선호취향:" + userPreference + " 유저위치:" + userLocation;
 
         textPart.put("text", prompt);
         
@@ -330,7 +349,7 @@ public class AiEmotionAnalysisService {
         log.info("[Gemini API Call] 전체 프롬프트 내용: {}", prompt); // DEBUG 레벨로 설정하여 평소에는 보이지 않도록 함
 
         ObjectNode generationConfig = requestBody.putObject("generationConfig");
-        generationConfig.put("temperature", 0.1);
+        generationConfig.put("temperature", 0.9);
         generationConfig.put("topK", 1);
         generationConfig.put("topP", 0.8);
         generationConfig.put("maxOutputTokens", 8192);
@@ -432,9 +451,27 @@ public class AiEmotionAnalysisService {
         if (contentHash != null) {
             diaryRecord.setContentHash(contentHash);
         }
+        //키워드 파싱 및 DB 저장
+        List<String> keywords = new ArrayList<>();
+        if (result.has("keywords") && result.get("keywords").isArray()) {
+            for (JsonNode keyword : result.get("keywords")) {
+                keywords.add(keyword.asText());
+            }
+        }
+        
+        // DB에는 콤마로 구분된 문자열로 저장
+        if (!keywords.isEmpty()) {
+            diaryRecord.setKeywords(String.join(", ", keywords));
+        } else {
+            diaryRecord.setKeywords(null);
+        }
+        
         diaryRecordRepository.save(diaryRecord);
         updateDailyStats(diaryRecord, emotions);
-        return new EmotionAnalysisResultDto(emotionDtos, diaryRecord.getDiaryRecordId());
+        
+        EmotionAnalysisResultDto resultDto = new EmotionAnalysisResultDto(emotionDtos, diaryRecord.getDiaryRecordId());
+        resultDto.setKeywords(keywords); // DTO에는 리스트로 설정
+        return resultDto;
     }
 
     // 감정 분석 결과 조회 (감정 리스트 반환)

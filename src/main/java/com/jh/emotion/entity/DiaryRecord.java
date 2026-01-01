@@ -74,6 +74,9 @@ public class DiaryRecord {//일기 정보 (사용자 일기)
     @Column(nullable = true)
     private String aiComment; // AI 코멘트
 
+    @Column(columnDefinition = "TEXT")
+    private String keywords; // AI 추출 핵심 키워드 (콤마로 구분하여 저장)
+
     @Column(length = 64)
     private String contentHash; // (일기+사용자위치(지역)) 해시값 저장
 
