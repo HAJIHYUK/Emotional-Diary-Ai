@@ -290,4 +290,101 @@ body {
     width: 100%; 
     padding-top: 56.25%; 
   }
+
+  /* --- [모바일] 일기 목록(DiaryList) 수정 --- */
+  
+  /* 정렬 버튼 가로 배치 강제 */
+  .d-flex.justify-content-end.mb-3 {
+    justify-content: space-between !important;
+    width: 100%;
+  }
+  
+  .btn-group {
+    width: 100%;
+    display: flex;
+  }
+  
+  .btn-group .btn {
+    flex: 1; /* 버튼 너비 균등 분할 */
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+
+  /* 테이블을 카드 리스트처럼 변형 (스크롤 없애기) */
+  .table-responsive {
+    border: none;
+  }
+  
+  .table thead {
+    display: none; /* 헤더 숨김 */
+  }
+  
+  .table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 1rem;
+    background-color: white;
+    box-shadow: var(--shadow-light);
+  }
+  
+  .table td {
+    display: block;
+    text-align: left;
+    padding: 0.3rem 0;
+    border: none;
+  }
+  
+  /* 날짜와 날씨는 작게 표시 */
+  .table td:nth-child(1), /* 날짜 */
+  .table td:nth-child(2) { /* 날씨 */
+    display: inline-block;
+    font-size: 0.85rem;
+    color: var(--text-light-color);
+    margin-right: 10px;
+  }
+  
+  /* 내용은 크게 강조 */
+  .table td:nth-child(4) { /* 내용 */
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 감정 배지는 오른쪽으로 */
+  .table td:nth-child(3) { /* 감정 */
+    display: block;
+    margin-top: 0.5rem;
+  }
+
+  /* --- [모바일] 설정 페이지(Settings) 수정 --- */
+  
+  /* 입력창과 버튼을 세로로 배치하여 공간 확보 */
+  .input-group {
+    flex-direction: column;
+  }
+  
+  .input-group .form-control {
+    width: 100% !important;
+    border-radius: var(--border-radius-md) !important;
+    margin-bottom: 0.5rem;
+  }
+  
+  .input-group .btn {
+    width: 100%;
+    border-radius: var(--border-radius-md) !important;
+  }
+  
+  /* 설명 텍스트 잘림 방지 */
+  .form-text {
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    display: block; /* 줄바꿈 허용 */
+  }
 }
