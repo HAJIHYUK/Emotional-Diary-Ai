@@ -4,11 +4,11 @@ import { RiKakaoTalkFill } from 'react-icons/ri';
 import styles from './Login.module.css';
 
 function Login() {
-    const KAKAO_JAVASCRIPT_KEY = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY;
-    const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI; 
+    // const KAKAO_JAVASCRIPT_KEY = import.meta.env.VITE_KAKAO_JAVASCRIPT_KEY;
+    // const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI; 
     // [배포 수정] 환경변수 대신 하드코딩 (빌드 문제 해결용)
-    // const KAKAO_JAVASCRIPT_KEY = '4b4f2c67b097ab92e7c26510b13baa70'; // JavaScript 키
-    // const KAKAO_REDIRECT_URI = 'http://3.39.187.53:8080/auth/kakao/callback'; // 서버 IP 주소
+    const KAKAO_JAVASCRIPT_KEY = '4b4f2c67b097ab92e7c26510b13baa70'; // JavaScript 키
+    const KAKAO_REDIRECT_URI = 'http://3.39.187.53:8080/auth/kakao/callback'; // 서버 IP 주소
 
     const kakaoLoginUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_JAVASCRIPT_KEY}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
 
