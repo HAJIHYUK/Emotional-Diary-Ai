@@ -236,3 +236,70 @@
   }
 }
 
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  .pageContainer {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .mainContent {
+    flex-direction: column; /* 세로 배치 */
+    gap: 1.5rem;
+  }
+
+  /* 카테고리 메뉴를 가로 스크롤 가능한 상단 바 형태로 변경 */
+  .categoryNav {
+    flex: 0 0 auto;
+    border-right: none;
+    border-bottom: 1px solid #e9ecef;
+    padding-right: 0;
+    padding-bottom: 1rem;
+    width: 100%;
+    overflow-x: auto; /* 가로 스크롤 */
+    white-space: nowrap; /* 줄바꿈 방지 */
+    -webkit-overflow-scrolling: touch; /* 부드러운 스크롤 */
+  }
+
+  .categoryList {
+    display: flex;
+    gap: 0.5rem;
+    position: static; /* 스티키 해제 */
+  }
+
+  .categoryItem {
+    flex-direction: column; /* 아이콘 위, 글자 아래 */
+    margin-bottom: 0;
+    padding: 0.7rem 1.2rem;
+    font-size: 0.8rem;
+    text-align: center;
+    min-width: 100px; /* 긴 단어(ENTERTAINMENT) 대응을 위해 너비 확대 */
+    flex-shrink: 0; /* 중요: 너비가 강제로 줄어들지 않게 함 */
+  }
+
+  .categoryItem svg {
+    margin-right: 0;
+    margin-bottom: 5px;
+    font-size: 1.5rem;
+  }
+
+  /* 장르 선택 영역 */
+  .genreSelection {
+    padding-left: 0;
+  }
+
+  .genreGrid {
+    justify-content: center; /* 버튼 가운데 정렬 */
+    gap: 0.6rem;
+  }
+
+  .genreButton {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .submitContainer {
+    margin-top: 2rem;
+  }
+}
+
