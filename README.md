@@ -127,25 +127,25 @@ AI가 일기의 문맥을 심층 분석하여 **7가지 감정 지표(기쁨, �
 
 ```mermaid
 graph LR
-    User[User (Mobile/PC)] --> React[Frontend (React/Vite)]
-    React --> Nginx[Nginx (Reverse Proxy)]
-    Nginx --> Spring[Spring Boot Server]
+    User["User (Mobile/PC)"] --> React["Frontend (React/Vite)"]
+    React --> Nginx["Nginx (Reverse Proxy)"]
+    Nginx --> Spring["Spring Boot Server"]
     
     subgraph Backend
-        Spring --> Security[Spring Security (JWT/OAuth2)]
-        Spring --> JPA[Spring Data JPA]
-        Spring --> Async[Async Executor]
+        Spring --> Security["Spring Security (JWT/OAuth2)"]
+        Spring --> JPA["Spring Data JPA"]
+        Spring --> Async["Async Executor"]
     end
     
     subgraph Data
-        JPA --> MySQL[(MySQL DB)]
-        JPA --> Redis[(Redis Cache)]
+        JPA --> MySQL[("MySQL DB")]
+        JPA --> Redis[("Redis Cache")]
     end
     
     subgraph AI_Service
-        Async --> Gemini[Google Gemini API]
-        Async --> YouTube[YouTube Data API]
-        Async --> Naver[Naver Search API]
+        Async --> Gemini["Google Gemini API"]
+        Async --> YouTube["YouTube Data API"]
+        Async --> Naver["Naver Search API"]
     end
 ```
 
