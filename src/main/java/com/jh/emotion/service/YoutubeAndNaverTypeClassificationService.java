@@ -79,7 +79,7 @@ public class YoutubeAndNaverTypeClassificationService {
             if (link != null && !link.contains("smartstore") && !link.contains("blog")) {
                 finalLink = link;
             } else {
-                finalLink = naverSearchService.selectBestLink(naverSearchService.searchPlaceLinks(title, 10, "수원"));
+                finalLink = naverSearchService.selectBestLink(naverSearchService.searchPlaceLinks(title, 10, user.getLocation()));
             }
             
             if (finalLink == null) {

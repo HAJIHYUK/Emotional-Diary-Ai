@@ -245,6 +245,14 @@ function EmotionStats() {
     }
   };
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // 제목과 데이터 레이블을 모두 그리는 커스텀 플러그인
   const customDrawingPlugin = {
     id: 'customDrawingPlugin',
@@ -254,10 +262,9 @@ function EmotionStats() {
       const titleText = `\"${displayPeriodLabel}\" 감정 분포`;
       
       ctx.save();
-      ctx.font = 'bold 16px "Noto Sans KR", sans-serif';
+      ctx.font = `bold ${isMobile ? '14px' : '16px'} "Noto Sans KR", sans-serif`;
       ctx.fillStyle = '#495057';
       ctx.textAlign = 'center';
-      // 제목을 캔버스 상단에 직접 그립니다 (Y 좌표: 20)
       ctx.fillText(titleText, chart.width / 2, 20);
       ctx.restore();
     },
@@ -272,13 +279,16 @@ function EmotionStats() {
         if (!stat) return;
 
         const percentage = `${parseFloat(data.datasets[0].data[index]).toFixed(1)}%`;
-        const avgLevel = `(평균 감정 강도: ${stat.avgLevel.toFixed(1)})`;
+        // 모바일에서는 텍스트 축약
+        const avgLevel = isMobile 
+            ? `(강도: ${stat.avgLevel.toFixed(1)})` 
+            : `(평균 감정 강도: ${stat.avgLevel.toFixed(1)})`;
         
         const textY = barY - 25;
         const barTopY = chart.scales.y.getPixelForValue(data.datasets[0].data[index]);
         const textInsideY = barTopY + 30;
 
-        const isInside = barTopY < 80; // 제목과의 충돌을 피하기 위해 임계값 증가
+        const isInside = barTopY < 80;
         const finalY = isInside ? textInsideY : textY;
         
         const barColor = bar.options.backgroundColor;
@@ -287,14 +297,15 @@ function EmotionStats() {
 
         ctx.save();
         
-        ctx.font = 'bold 15px "Noto Sans KR", sans-serif';
+        // 폰트 크기도 모바일 대응
+        ctx.font = `bold ${isMobile ? '11px' : '15px'} "Noto Sans KR", sans-serif`;
         ctx.fillStyle = finalColor;
         ctx.textAlign = 'center';
         ctx.fillText(percentage, x, finalY);
 
-        ctx.font = '12px "Noto Sans KR", sans-serif';
+        ctx.font = `${isMobile ? '10px' : '12px'} "Noto Sans KR", sans-serif`;
         ctx.fillStyle = finalColor;
-        ctx.fillText(avgLevel, x, finalY + 18);
+        ctx.fillText(avgLevel, x, finalY + (isMobile ? 14 : 18));
         
         ctx.restore();
       });
