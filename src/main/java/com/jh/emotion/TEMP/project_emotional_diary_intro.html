@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Intro - Emotional Diary AI (Label Fixed)</title>
+    
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* PDF 변환 설정 (1280x720) */
+        @media print {
+            @page {
+                size: 33.86cm 19.05cm; /* 1280x720 꽉 찬 비율 */
+                margin: 0;
+            }
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+
+        body { font-family: 'Pretendard', sans-serif; background: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        
+        .page-container {
+            width: 1280px;
+            height: 720px;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            position: relative;
+            background-image: radial-gradient(at 0% 0%, rgba(167, 139, 250, 0.15) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, rgba(244, 114, 182, 0.15) 0px, transparent 50%);
+        }
+
+        .top-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: #0f172a; z-index: 30; }
+        
+        .screenshot-card {
+            background: white;
+            border-radius: 0.8rem;
+            border: 1px solid #000000;
+            box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+            height: 100%;
+        }
+        .screenshot-img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        .step-label-top {
+            background: #0f172a;
+            color: white;
+            padding: 0.35rem 1rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            margin-bottom: 0.6rem;
+            display: inline-block;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+            
+            /* [수정] 배경이 글자 크기에 딱 맞게 설정 */
+            width: fit-content;
+        }
+
+        .tech-badge {
+            font-size: 0.8rem;
+            font-weight: 800;
+            padding: 0.4rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #1e293b;
+            white-space: nowrap;
+        }
+
+        .link-card {
+            width: 270px;
+            height: 64px;
+            background: white;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            gap: 0.8rem;
+            box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-container p-10 pt-11 pb-6">
+        <div class="top-line"></div>
+
+        <header class="flex justify-between items-start mb-3 px-1.5">
+            <div>
+                <div class="flex items-start gap-4 mb-4">
+                    <a href="https://sae.kangnam.ac.kr/menu/board/info/..." target="_blank" class="mt-1 bg-indigo-100 text-indigo-800 px-5 py-2 rounded-xl text-[15px] font-black border-2 border-indigo-200 uppercase hover:bg-indigo-200 transition-all flex items-center gap-2.5 shadow-lg shrink-0">
+                        <i class="fas fa-trophy text-2xl text-amber-500"></i> 졸업작품 최우수작
+                    </a>
+
+                    <div class="flex flex-col">
+                        <h1 class="text-5xl font-black text-slate-900 tracking-tight leading-none mb-2">하루의 조각 : AI 감정 분석 다이어리</h1>
+                        <p class="text-slate-800 text-lg font-bold italic">"당신의 하루를 이해하는 나만의 맞춤 콘텐츠 추천 AI 일기장"</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap gap-2.5 max-w-5xl ml-[2px]"> 
+                    <span class="tech-badge">Java 17</span>
+                    <span class="tech-badge">Spring Boot 3</span>
+                    <span class="tech-badge">Spring Security</span>
+                    <span class="tech-badge">JPA</span>
+                    <span class="tech-badge bg-blue-50 text-blue-700 border-blue-100">MySQL</span>
+                    <span class="tech-badge bg-rose-50 text-rose-700 border-rose-100">Redis</span>
+                    <span class="tech-badge bg-orange-50 text-orange-700 font-black border-orange-100">AWS EC2</span>
+                    <span class="tech-badge bg-sky-50 text-sky-700 font-black border-sky-100">React</span>
+                    <span class="tech-badge bg-violet-50 text-violet-700 font-black border-violet-100">Gemini API</span>
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-end gap-3">
+                <a href="https://diaryai.kro.kr/" target="_blank" class="link-card border-orange-400 border-2 hover:bg-orange-50 active:scale-95">
+                    <i class="fab fa-aws text-4xl text-[#FF9900]"></i>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-end gap-1 mb-0.5 text-[9px] text-orange-600 font-bold uppercase tracking-widest leading-none">
+                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Live on AWS
+                        </div>
+                        <p class="text-[15px] font-black text-slate-900">diaryai.kro.kr</p>
+                    </div>
+                </a>
+                
+                <a href="https://github.com/HAJIHYUK/Emotional-Diary-Ai" target="_blank" class="link-card hover:bg-slate-50 active:scale-95">
+                    <i class="fab fa-github text-4xl text-slate-900"></i>
+                    <div class="flex-1 text-left">
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-0.5">Source Code</p>
+                        <p class="text-xs font-black text-slate-700 leading-tight">github.com/HAJIHYUK/Emotional-Diary-Ai</p>
+                    </div>
+                </a>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-2 gap-9 flex-1 min-h-0 px-1.5 mb-3">
+            <div class="flex flex-col h-full items-start">
+                <span class="step-label-top">STEP 01. 일기 기록 & 캘린더 관리</span>
+                <div class="screenshot-card w-full">
+                    <img src="./image/diary0.png" alt="Main View" class="screenshot-img" style="object-position: left top;">
+                </div>
+            </div>
+            <div class="flex flex-col h-full items-start">
+                <span class="step-label-top">STEP 02. 일기 상세 확인</span>
+                <div class="screenshot-card w-full">
+                    <img src="./image/diary1.png" alt="Detail View" class="screenshot-img" style="object-position: 41% top;">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech 1 - Logic & Auth (1280x720)</title>
+    
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @media print {
+            @page { size: 33.86cm 19.05cm; margin: 0; }
+            body { margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+        body { font-family: 'Pretendard', sans-serif; background: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        .page-container {
+            width: 1280px; height: 720px;
+            background-color: #f8fafc;
+            display: flex; flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            overflow: hidden; position: relative;
+            background-image: radial-gradient(at 0% 0%, rgba(167, 139, 250, 0.15) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, rgba(244, 114, 182, 0.15) 0px, transparent 50%);
+        }
+
+        .top-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: #0f172a; z-index: 30; }
+        .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 1.2rem; }
+        
+        .badge { font-size: 0.8rem; font-weight: 800; padding: 0.3rem 0.8rem; border-radius: 9999px; text-transform: uppercase; }
+        .badge-navy { background: #0f172a; color: white; }
+
+        .code-block { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.8rem; font-size: 0.8rem; line-height: 1.5; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
+        .kw { color: #c792ea; } .fn { color: #82aaff; } .st { color: #c3e88d; }
+    </style>
+</head>
+<body>
+
+    <div class="page-container p-10 pt-12 pb-12">
+        <div class="top-line"></div>
+
+        <header class="flex justify-between items-center mb-3 px-3">
+            <div>
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="badge badge-navy">Key Engineering 01</span>
+                    <span class="text-indigo-600 font-black text-sm uppercase tracking-widest">Logic & Security</span>
+                </div>
+                <h1 class="text-5xl font-black text-slate-900 tracking-tight leading-tight">하루의 조각 : Advanced Service Logic</h1>
+            </div>
+            <div class="text-right text-slate-400 font-bold tracking-widest text-[10px] uppercase">
+                Backend Core
+            </div>
+        </header>
+
+        <div class="grid grid-cols-2 gap-8 flex-1 min-h-0 mb-1">
+            
+            <div class="glass-card p-8 border-t-[6px] border-violet-500 shadow-2xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-5 mb-5">
+                        <div class="w-14 h-14 rounded-2xl bg-violet-100 flex items-center justify-center text-violet-600 text-2xl shadow-sm">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-3xl leading-tight">감정-콘텐츠 매핑 엔진</h3>
+                            <p class="text-[15px] text-slate-500 font-medium mt-0.5">분석 결과와 실 서비스 데이터의 결합</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-5 text-slate-700">
+                        <p class="text-xl leading-relaxed font-bold">AI 분석값을 서비스 가치로 변환하는 <strong>자체 매핑 알고리즘</strong>을 설계했습니다.</p>
+                        <ul class="space-y-3 text-[15px] font-semibold">
+                            <li class="flex gap-3"><i class="fas fa-check-circle text-violet-500 mt-1"></i> <span><strong>Emotion Parsing:</strong> 7개 주요 감정 수치를 기반으로 추천 카테고리 선별.</span></li>
+                            <li class="flex gap-3"><i class="fas fa-check-circle text-violet-500 mt-1"></i> <span><strong>Link Generation:</strong> 분석된 키워드로 YouTube/Naver API 실시간 매칭.</span></li>
+                            <li class="flex gap-3"><i class="fas fa-check-circle text-violet-500 mt-1"></i> <span><strong>Personalization:</strong> 사용자 평소 취향 가중치를 통한 1:1 개인화 추천.</span></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="code-block mt-5">
+<span class="kw">public void</span> <span class="fn">generateRecommendations</span>(...) {
+  <span class="kw">var</span> result = <span class="fn">callGeminiAPI</span>(emotions, keywords);
+  recomService.<span class="fn">save</span>(diaryId, result);
+}
+                </div>
+            </div>
+
+            <div class="glass-card p-8 border-t-[6px] border-emerald-500 shadow-2xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-5 mb-5">
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600 text-2xl shadow-sm">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-3xl leading-tight">JWT & OAuth2 Security</h3>
+                            <p class="text-[15px] text-slate-500 font-medium mt-0.5">표준 보안 인증 아키텍처 구축</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-5 text-slate-700">
+                        <p class="text-xl leading-relaxed font-bold">서버 확장을 고려한 <strong>Stateless 인증</strong>과 소셜 로그인 통합으로 보안성을 강화했습니다.</p>
+                        <ul class="space-y-3 text-[15px] font-semibold">
+                            <li class="flex gap-3"><i class="fas fa-lock text-emerald-500 mt-1"></i> <span><strong>Token Architecture:</strong> Access / Refresh Token을 활용한 세션리스 환경.</span></li>
+                            <li class="flex gap-3"><i class="fas fa-lock text-emerald-500 mt-1"></i> <span><strong>OAuth2 Integration:</strong> 카카오/구글 소셜 로그인 연동 및 인증 정보 관리.</span></li>
+                            <li class="flex gap-3"><i class="fas fa-lock text-emerald-500 mt-1"></i> <span><strong>Security Filter:</strong> 요청 단위의 토큰 검증 필터 체인 자동화.</span></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="code-block mt-5">
+<span class="kw">protected void</span> <span class="fn">doFilterInternal</span>(...) {
+  <span class="kw">String</span> token = <span class="fn">resolveToken</span>(request);
+  <span class="kw">if</span> (token != <span class="kw">null</span> && jwtProvider.<span class="fn">validateToken</span>(token)) {
+    <span class="kw">var</span> auth = jwtProvider.<span class="fn">getAuthentication</span>(token);
+    SecurityContextHolder.<span class="fn">getContext</span>().<span class="fn">setAuthentication</span>(auth);
+  }
+}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

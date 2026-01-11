@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Intro - Emotional Diary AI (Part 2 - 1280x720)</title>
+    
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* PDF 변환 설정 (1280x720) */
+        @media print {
+            @page {
+                size: 33.86cm 19.05cm; /* 1280x720 꽉 찬 비율 */
+                margin: 0;
+            }
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+
+        body { font-family: 'Pretendard', sans-serif; background: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        
+        /* 1600x900 -> 1280x720 (80% 축소) */
+        .page-container {
+            width: 1280px;
+            height: 720px;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            position: relative;
+            background-image: radial-gradient(at 0% 0%, rgba(167, 139, 250, 0.15) 0px, transparent 50%),
+                              radial-gradient(at 100% 100%, rgba(244, 114, 182, 0.15) 0px, transparent 50%);
+        }
+
+        .top-line { position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: #0f172a; z-index: 30; }
+        
+        .screenshot-card {
+            background: white;
+            border-radius: 1.2rem; /* 1.5 -> 1.2 */
+            border: 1px solid #6366f1;
+            box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.25);
+            overflow: hidden;
+            position: relative;
+            flex: 1;
+        }
+        .screenshot-img {
+            width: 100%; height: 100%; object-fit: contain; background: #f8fafc;
+        }
+
+        .step-label-top {
+            background: #4f46e5;
+            color: white;
+            padding: 0.5rem 1.2rem; /* 패딩 축소 */
+            border-radius: 999px;
+            font-size: 0.9rem; /* 1.1 -> 0.9 */
+            font-weight: 800;
+            margin-bottom: 1rem; /* 1.2 -> 1.0 */
+            display: inline-block;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-container p-10 pt-11 pb-5">
+        <div class="top-line"></div>
+
+        <header class="mb-3 px-3">
+            <h2 class="text-indigo-600 font-black text-sm uppercase tracking-widest mb-2">Core Feature Highlight</h2>
+            <h1 class="text-5xl font-black text-slate-900 tracking-tight leading-tight">AI 감정 분석 및 맞춤 콘텐츠 추천</h1>
+            <p class="text-slate-800 text-[17px] mt-3 font-bold max-w-4xl leading-relaxed">
+                사용자의 <span class="text-indigo-600">현재 위치</span>, 실시간 <span class="text-indigo-600">감정상태</span>, 그리고 개인별 <span class="text-indigo-600">취향 데이터</span>를 <br>
+                정교하게 결합하여 세상에 단 하나뿐인 <span class="text-indigo-600">맞춤형</span> 힐링 콘텐츠를 제안합니다. 
+            </p>
+        </header>
+
+        <div class="flex-1 min-h-0 px-3 flex flex-col mb-1.5">
+            <div class="flex flex-col h-full">
+                <span class="step-label-top">STEP 03. 핵심 기능: 실시간 감정 분석 결과 & 추천 시스템</span>
+                
+                <div class="screenshot-card">
+                    <img src="./image/diary2.png" alt="AI Analysis Result" class="screenshot-img">
+                    
+                    <div class="absolute bottom-9 right-9 bg-white/95 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-indigo-100 max-w-[450px]">
+                        <h4 class="font-bold text-slate-900 text-xl mb-3 flex items-center gap-2.5">
+                            <i class="fas fa-magic text-indigo-500"></i> AI Intelligence Logic
+                        </h4>
+                        <ul class="text-[15px] text-slate-700 space-y-2 font-semibold leading-relaxed">
+                            <li>• <strong>7가지 감정 지표</strong>를 수치화하여 시각화</li>
+                            <li>• 일기 본문에서 키워드 추출 및 <strong>조언 생성</strong></li>
+                            <li>• 감정 데이터 기반 <strong>YouTube/음악/장소</strong> 추천</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
